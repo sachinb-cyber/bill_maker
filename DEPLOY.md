@@ -129,13 +129,6 @@ You should see: `{"ok":true,"message":"Database initialized"}`
 
 ---
 
-## Login Credentials
-
-| Role         | Username       | Password                  |
-|--------------|----------------|---------------------------|
-| Admin        | `admin`        | `Sachin@12389qweasd#4`    |
-| Bill Checker | `Bill checker` | `Sachin@123098@#1asdd`    |
-| Demo Farmer  | `0032`         | `9876543210`              |
 
 ---
 
