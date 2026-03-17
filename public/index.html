@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Shri Krishna Dudh Dairy</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+:root{
+  --g1:#1b5e20;--g2:#2e7d32;--g3:#43a047;--gL:#e8f5e9;--gLL:#f1f8f1;
+  --a1:#e65100;--aL:#fff3e0;--b1:#1565c0;--bL:#e3f2fd;--r1:#b71c1c;--rL:#ffebee;
+  --border:#dce0e3;--border2:#b0bec5;--text:#1a2226;--muted:#607d8b;
+  --white:#fff;--bg:#f5f3ef;--mono:'Courier New',Courier,monospace;--rad:8px;--rad2:12px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+.screen{display:none;min-height:100vh;flex-direction:column}.screen.active{display:flex}
+/* LANDING */
+#scLanding{background:linear-gradient(145deg,#071a09,#1b5e20 45%,#0d2b5e 100%);align-items:center;justify-content:center;padding:20px}
+.land-wrap{width:100%;max-width:440px}
+.land-logo{text-align:center;margin-bottom:32px;color:#fff}
+.land-logo .lico{font-size:56px;display:block;margin-bottom:10px}
+.land-logo h1{font-size:22px;font-weight:800;letter-spacing:.02em;line-height:1.3}
+.land-logo p{font-size:12px;opacity:.6;margin-top:5px}
+.land-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:12px}
+.lcard{background:rgba(255,255,255,.1);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:14px;padding:22px 16px;cursor:pointer;text-align:center;color:#fff;transition:.2s}
+.lcard:hover{background:rgba(255,255,255,.2);transform:translateY(-2px)}
+.lcard .lci{font-size:30px;display:block;margin-bottom:8px}
+.lcard .lct{font-size:14px;font-weight:700;margin-bottom:3px}
+.lcard .lcs{font-size:11px;opacity:.65}
+.lverify{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.13);border-radius:14px;padding:14px 18px;cursor:pointer;display:flex;align-items:center;gap:12px;color:#fff;transition:.2s}
+.lverify:hover{background:rgba(255,255,255,.14)}
+/* TOPBAR */
+.topbar{background:var(--g1);color:#fff;height:50px;display:flex;align-items:center;padding:0 16px;gap:10px;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.2)}
+.tbt{font-size:14px;font-weight:700;flex:1}
+.tbrole{background:rgba(255,255,255,.2);padding:2px 9px;border-radius:20px;font-size:10px;font-weight:800}
+.tbbtn{background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.25);color:#fff;padding:4px 12px;border-radius:5px;font-size:11px;cursor:pointer;font-weight:700}
+.tbbtn:hover{background:rgba(255,255,255,.25)}
+/* LAYOUT */
+.app-body{display:flex;flex:1;overflow:hidden;height:calc(100vh - 50px)}
+.sidebar{width:200px;background:var(--white);border-right:1px solid var(--border);padding:8px 0;overflow-y:auto;flex-shrink:0}
+.ng{padding:5px 12px;font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;margin-top:6px}
+.ni{display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;font-weight:500;color:#546e7a;cursor:pointer;transition:.12s;border-left:3px solid transparent}
+.ni:hover{background:var(--gLL);color:var(--g2)}
+.ni.active{background:var(--gL);color:var(--g1);border-left-color:var(--g1);font-weight:700}
+.ni .ic{font-size:14px;width:16px;text-align:center}
+.nbadge{margin-left:auto;background:var(--a1);color:#fff;border-radius:10px;padding:1px 6px;font-size:9px;font-weight:800}
+.content{flex:1;overflow-y:auto;padding:20px}
+.pg{display:none}.pg.active{display:block}
+/* CARDS */
+.card{background:var(--white);border:1px solid var(--border);border-radius:var(--rad2);margin-bottom:16px;overflow:hidden}
+.ch{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:#fafbfc}
+.ch h3{font-size:13px;font-weight:700}.ch p{font-size:11px;color:var(--muted)}
+.cb{padding:16px}.pt{font-size:19px;font-weight:800;margin-bottom:2px}.ps{font-size:13px;color:var(--muted);margin-bottom:16px}
+/* STATS */
+.sg{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:16px}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--rad2);padding:13px 15px}
+.sc .sl{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px}
+.sc .sv{font-size:21px;font-weight:800}.sc .ss{font-size:11px;color:var(--muted);margin-top:1px}
+.sc.cg{border-left:4px solid var(--g3)}.sc.ca{border-left:4px solid var(--a1)}.sc.cb{border-left:4px solid var(--b1)}.sc.cr{border-left:4px solid var(--r1)}
+/* TABLE */
+.tbl{width:100%;border-collapse:collapse;font-size:12px}
+.tbl th{background:var(--bg);padding:7px 11px;text-align:left;font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;border-bottom:1px solid var(--border)}
+.tbl td{padding:8px 11px;border-bottom:1px solid var(--border);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:#f9fafb}
+.mono{font-family:var(--mono);font-size:11px}
+/* FORMS */
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+.fg3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:11px}
+.f{display:flex;flex-direction:column;gap:4px}
+.f label{font-size:10px;font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.f input,.f select,.f textarea{padding:8px 10px;border:1px solid var(--border2);border-radius:6px;font-size:13px;font-family:inherit;color:var(--text);background:#fff;transition:.12s}
+.f input:focus,.f select:focus,.f textarea:focus{outline:none;border-color:var(--g1);box-shadow:0 0 0 2px rgba(27,94,32,.1)}
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:7px 14px;border-radius:6px;font-size:12px;font-weight:700;cursor:pointer;border:none;transition:.12s}
+.bg{background:var(--g1);color:#fff}.bg:hover{background:var(--g2)}
+.ba{background:var(--a1);color:#fff}.ba:hover{background:#bf360c}
+.bb{background:var(--b1);color:#fff}.bb:hover{background:#0d47a1}
+.br{background:var(--r1);color:#fff}.br:hover{background:#7f0000}
+.bgh{background:transparent;color:var(--text);border:1px solid var(--border2)}.bgh:hover{background:var(--bg)}
+.bsm{padding:5px 10px;font-size:11px}.bxs{padding:3px 7px;font-size:10px}
+.btn-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:4px}
+/* TAGS */
+.tag{display:inline-block;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.tg{background:var(--gL);color:var(--g2)}.ta{background:var(--aL);color:var(--a1)}
+.tb2{background:var(--bL);color:var(--b1)}.tr2{background:var(--rL);color:var(--r1)}
+/* RECEIPT */
+.rcpt-wrap{background:#e8e5df;padding:18px;display:flex;gap:18px;flex-wrap:wrap;align-items:flex-start}
+.rcpt{font-family:var(--mono);font-size:11.2px;line-height:1.62;color:#111;background:#fff;padding:12px 14px;white-space:pre;display:inline-block;box-shadow:3px 4px 14px rgba(0,0,0,.18);border:1px solid #bbb;letter-spacing:.01em;min-width:262px}
+/* MONTH GRID */
+.mgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.mcard{border:1px solid var(--border);border-radius:var(--rad);overflow:hidden;transition:.12s}
+.mcard:hover{border-color:var(--g3);box-shadow:0 2px 8px rgba(27,94,32,.12)}
+.mch{padding:6px 10px;background:var(--gLL);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.mch span{font-size:11px;font-weight:700;color:var(--g1)}.mch small{font-size:9px;color:var(--muted)}
+.mcb{padding:7px 10px;font-size:11px;color:var(--muted)}
+.mcb .ma{font-size:12px;font-weight:700;color:var(--text);font-family:var(--mono)}
+/* PER-MONTH */
+.pmgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.pmcard{border:1px solid var(--border);border-radius:6px;overflow:hidden}
+.pmch{padding:5px 9px;background:var(--gLL);font-size:11px;font-weight:700;color:var(--g1);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.pmch small{font-size:9px;color:var(--muted);font-weight:400}
+.pmcb{padding:7px;display:grid;gap:4px}
+.pmf{display:flex;flex-direction:column;gap:2px}
+.pmf label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase}
+.pmf input{padding:4px 6px;border:1px solid var(--border);border-radius:4px;font-size:11px;width:100%}
+.pmf input:focus{outline:none;border-color:var(--g1)}
+/* MODAL */
+.mbg{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;align-items:center;justify-content:center}
+.mbg.open{display:flex}
+.modal{background:#fff;border-radius:var(--rad2);width:92%;max-width:520px;max-height:92vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal.lg{max-width:720px}
+.mh{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
+.mh h3{font-size:15px;font-weight:700}
+.mclose{background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted)}
+.mb{padding:18px}.mf{padding:12px 18px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:7px;background:#fafbfc}
+/* INLINE EDIT */
+.iet input{width:60px;padding:3px 5px;border:1px solid var(--border2);border-radius:4px;font-size:11px;font-family:var(--mono)}
+.iet input:focus{outline:none;border-color:var(--g1)}
+/* AUTH */
+.auth-center{display:flex;align-items:center;justify-content:center;flex:1;padding:20px;background:linear-gradient(135deg,#071a09,#1b5e20 60%,#0d2b5e)}
+.auth-box{background:#fff;border-radius:var(--rad2);padding:32px;width:100%;max-width:360px;box-shadow:0 10px 40px rgba(0,0,0,.22)}
+.auth-logo{text-align:center;margin-bottom:20px}
+.auth-logo .ai{font-size:36px;display:block;margin-bottom:7px}
+.auth-logo h2{font-size:17px;font-weight:800;color:var(--g1)}
+.auth-logo p{font-size:11px;color:var(--muted);margin-top:2px}
+.atabs{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;margin-bottom:16px}
+.atab{flex:1;padding:8px;text-align:center;font-size:12px;font-weight:700;cursor:pointer;background:var(--bg);color:var(--muted);transition:.12s}
+.atab.active{background:var(--g1);color:#fff}
+.aerr{background:var(--rL);color:var(--r1);border:1px solid #ef9a9a;border-radius:6px;padding:8px 11px;font-size:12px;margin-bottom:10px;display:none}
+.abtn{width:100%;padding:10px;background:var(--g1);color:#fff;border:none;border-radius:6px;font-size:13px;font-weight:800;cursor:pointer}
+.abtn:hover{background:var(--g2)}
+/* VERIFY */
+.vbox{background:#fff;border-radius:var(--rad2);width:100%;max-width:490px;box-shadow:0 8px 30px rgba(0,0,0,.1);overflow:hidden}
+.vhead{background:var(--g1);color:#fff;padding:20px 24px;text-align:center}
+.vhead h2{font-size:18px;font-weight:800}.vhead p{font-size:11px;opacity:.7;margin-top:3px}
+.vbody{padding:22px}
+.vres{border-radius:var(--rad2);padding:18px 20px;margin-top:14px;text-align:center}
+.vgenuine{background:var(--gL);border:2px solid var(--g3)}
+.vfake{background:var(--rL);border:2px solid #ef5350}
+.vtamper{background:#fff8e1;border:2px solid #ffb300}
+.vicon{font-size:42px;display:block;margin-bottom:8px}
+.vtitle{font-size:20px;font-weight:800;margin-bottom:4px}
+.vsub{font-size:12px;color:var(--muted);line-height:1.5}
+.vgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:14px;text-align:left}
+.vitem .vl{font-size:9px;font-weight:800;color:var(--muted);text-transform:uppercase;margin-bottom:2px}
+.vitem .vv{font-size:13px;font-weight:600}
+.vamt{background:var(--g1);color:#fff;border-radius:8px;padding:12px;font-size:17px;font-weight:800;text-align:center;margin-top:12px}
+/* PAY DOTS */
+.pdot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.pd-paid{background:#43a047}.pd-pending{background:#e65100}.pd-partial{background:#f9a825}
+/* LOADING */
+.loading{text-align:center;padding:32px;color:var(--muted);font-size:13px}
+.spinner{display:inline-block;width:20px;height:20px;border:2px solid var(--border);border-top-color:var(--g1);border-radius:50%;animation:spin .7s linear infinite;margin-right:8px;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.toast{position:fixed;bottom:20px;right:20px;background:#333;color:#fff;padding:10px 18px;border-radius:8px;font-size:13px;z-index:9999;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+@media(max-width:700px){.sg{grid-template-columns:1fr 1fr}.mgrid,.pmgrid{grid-template-columns:1fr 1fr}.sidebar{display:none}.fg2,.fg3{grid-template-columns:1fr}}
+@media(max-width:420px){.land-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="toast" id="toast"></div>
+
+<!-- LANDING -->
+<div class="screen active" id="scLanding">
+  <div class="land-wrap">
+    <div class="land-logo">
+      <span class="lico">🥛</span>
+      <h1>SHRI KRISHNA DUDH DAIRY</h1>
+      <p>Milk Collection Bill Management System</p>
+    </div>
+    <div class="land-grid">
+      <div class="lcard" onclick="showS('scAdmin')"><span class="lci">👨‍💼</span><div class="lct">Admin Login</div><div class="lcs">Generate &amp; manage bills</div></div>
+      <div class="lcard" onclick="showS('scFarmer')"><span class="lci">👨‍🌾</span><div class="lct">Farmer Login</div><div class="lcs">Request &amp; download bills</div></div>
+    </div>
+    <div class="lverify" onclick="showS('scVerify')">
+      <span style="font-size:22px">🔍</span>
+      <div><div style="font-size:14px;font-weight:600">Bill Verification</div><div style="font-size:11px;opacity:.6">Secure login required</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN AUTH -->
+<div class="screen" id="scAdmin">
+  <div class="topbar"><span style="font-size:18px">🥛</span><div class="tbt">Shri Krishna Dudh Dairy</div><button class="tbbtn" onclick="showS('scLanding')">← Back</button></div>
+  <div class="auth-center">
+    <div class="auth-box">
+      <div class="auth-logo"><span class="ai">👨‍💼</span><h2>Admin Login</h2><p>Dairy Management System</p></div>
+      <div id="adErr" class="aerr"></div>
+      <div class="f" style="margin-bottom:11px"><label>Username</label><input id="adUser" placeholder="Enter username" autocomplete="username"></div>
+      <div class="f" style="margin-bottom:16px"><label>Password</label><input id="adPass" type="password" placeholder="Enter password" autocomplete="current-password"></div>
+      <button class="abtn" onclick="loginAdmin()">Login as Admin</button>
+    </div>
+  </div>
+</div>
+
+<!-- FARMER AUTH -->
+<div class="screen" id="scFarmer">
+  <div class="topbar"><span style="font-size:18px">🥛</span><div class="tbt">Shri Krishna Dudh Dairy</div><button class="tbbtn" onclick="showS('scLanding')">← Back</button></div>
+  <div class="auth-center">
+    <div class="auth-box">
+      <div class="auth-logo"><span class="ai">👨‍🌾</span><h2>Farmer Portal</h2><p>Login or register to manage your bills</p></div>
+      <div class="atabs"><div class="atab active" onclick="fTab('login')">Login</div><div class="atab" onclick="fTab('register')">Register</div></div>
+      <div id="fErr" class="aerr"></div>
+      <div id="fLoginF">
+        <div class="f" style="margin-bottom:11px"><label>Farmer Code</label><input id="fCode" placeholder="e.g. 0032"></div>
+        <div class="f" style="margin-bottom:16px"><label>Password (Mobile No.)</label><input id="fPass" type="password" placeholder="Mobile number"></div>
+        <button class="abtn" onclick="loginFarmer()">Login</button>
+      </div>
+      <div id="fRegF" style="display:none">
+        <div class="fg2" style="margin-bottom:10px">
+          <div class="f"><label>Full Name</label><input id="rName"></div>
+          <div class="f"><label>Mobile No.</label><input id="rMobile" placeholder="10 digits"></div>
+        </div>
+        <div class="fg2" style="margin-bottom:10px">
+          <div class="f"><label>Village</label><input id="rVillage"></div>
+          <div class="f"><label>Milk Type</label><select id="rMilk"><option>Cow</option><option>Buffalo</option><option>Mixed</option></select></div>
+        </div>
+        <div class="f" style="margin-bottom:16px"><label>Dairy Name</label><input id="rDairy" value="SHRI KRISHNA DUDH DAIRY"></div>
+        <button class="abtn" onclick="regFarmer()">Register &amp; Login</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- VERIFY -->
+<div class="screen" id="scVerify">
+  <div class="topbar"><span style="font-size:18px">🥛</span><div class="tbt">Bill Verification</div><button class="tbbtn" onclick="showS('scLanding')">← Back</button></div>
+  <div style="display:flex;align-items:center;justify-content:center;flex:1;padding:20px;background:linear-gradient(135deg,var(--gL),var(--bL))">
+    <div class="vbox">
+      <div class="vhead"><h2>🔍 Bill Verification</h2><p>Secure login required</p></div>
+      <div class="vbody">
+        <div id="vLoginPanel">
+          <div id="vErr" class="aerr"></div>
+          <div class="f" style="margin-bottom:11px"><label>Username</label><input id="vUser" placeholder="Enter username"></div>
+          <div class="f" style="margin-bottom:16px"><label>Password</label><input id="vPass" type="password" placeholder="Enter password"></div>
+          <button class="abtn" onclick="loginChecker()">Login to Verify</button>
+        </div>
+        <div id="vVerifyPanel" style="display:none">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+            <span style="font-size:12px;color:var(--g1);font-weight:700">✓ Bill Checker logged in</span>
+            <button class="btn bgh bxs" onclick="logoutChecker()">Logout</button>
+          </div>
+          <div class="fg2" style="margin-bottom:10px">
+            <div class="f"><label>Farmer Code</label><input id="vCode" placeholder="e.g. 0032"></div>
+            <div class="f"><label>Month</label>
+              <select id="vMon"><option value="">Select</option>
+                <option value="0">January</option><option value="1">February</option><option value="2">March</option>
+                <option value="3">April</option><option value="4">May</option><option value="5">June</option>
+                <option value="6">July</option><option value="7">August</option><option value="8">September</option>
+                <option value="9">October</option><option value="10">November</option><option value="11">December</option>
+              </select>
+            </div>
+          </div>
+          <div class="f" style="margin-bottom:12px"><label>Year</label>
+            <select id="vYear"><option value="25">2025</option><option value="26">2026</option><option value="24">2024</option></select>
+          </div>
+          <button class="btn bg" style="width:100%;justify-content:center;padding:10px;font-size:13px" onclick="doVerify()">🔍 Verify Bill</button>
+          <div id="vResult"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ADMIN APP -->
+<div class="screen" id="scAdminApp">
+  <div class="topbar">
+    <span style="font-size:18px">🥛</span>
+    <div class="tbt">Shri Krishna Dudh Dairy <span class="tbrole">ADMIN</span></div>
+    <span style="font-size:12px;opacity:.8" id="adName"></span>
+    <button class="tbbtn" onclick="logoutA()">Logout</button>
+  </div>
+  <div class="app-body">
+    <div class="sidebar">
+      <div class="ng">Main</div>
+      <div class="ni active" id="an-dash" onclick="aNav('dash')"><span class="ic">📊</span>Dashboard</div>
+      <div class="ng">Farmers</div>
+      <div class="ni" id="an-farmers" onclick="aNav('farmers')"><span class="ic">👨‍🌾</span>Manage Farmers</div>
+      <div class="ng">Bills</div>
+      <div class="ni" id="an-requests" onclick="aNav('requests')"><span class="ic">📥</span>Bill Requests <span class="nbadge" id="rBadge" style="display:none">0</span></div>
+      <div class="ni" id="an-generate" onclick="aNav('generate')"><span class="ic">⚡</span>Generate Bills</div>
+      <div class="ni" id="an-bills" onclick="aNav('bills')"><span class="ic">📋</span>Saved Bills</div>
+      <div class="ng">Finance</div>
+      <div class="ni" id="an-payments" onclick="aNav('payments')"><span class="ic">💰</span>Payments</div>
+    </div>
+    <div class="content">
+      <div class="pg active" id="ap-dash">
+        <div class="pt">Dashboard</div><div class="ps">Operations overview</div>
+        <div class="sg" id="aDashStats"></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+          <div class="card"><div class="ch"><h3>📥 Pending Requests</h3></div><div style="padding:0"><table class="tbl" id="aDashReq"></table></div></div>
+          <div class="card"><div class="ch"><h3>💰 Recent Payments</h3></div><div style="padding:0"><table class="tbl" id="aDashPay"></table></div></div>
+        </div>
+      </div>
+      <div class="pg" id="ap-farmers">
+        <div class="pt">Farmer Management</div><div class="ps">Add, edit and manage registered farmers</div>
+        <div class="card"><div class="ch"><h3>All Farmers</h3><button class="btn bg bsm" onclick="openFM()">+ Add Farmer</button></div><div style="padding:0"><table class="tbl" id="farmT"></table></div></div>
+      </div>
+      <div class="pg" id="ap-requests">
+        <div class="pt">Bill Requests</div><div class="ps">Farmer requests pending approval</div>
+        <div class="card"><div class="ch"><h3>All Requests</h3></div><div style="padding:0"><table class="tbl" id="reqT"></table></div></div>
+      </div>
+      <div class="pg" id="ap-generate">
+        <div class="pt">Generate Bills</div><div class="ps">Create 12-month bills — exact 58mm thermal format</div>
+        <div class="card"><div class="ch"><h3>Farmer &amp; Year</h3></div>
+          <div class="cb">
+            <div class="fg3" style="margin-bottom:11px">
+              <div class="f"><label>Farmer</label><select id="gFarmer" onchange="loadFDefs()"></select></div>
+              <div class="f"><label>Year</label><select id="gYear"><option value="25">2025</option><option value="26">2026</option><option value="24">2024</option></select></div>
+              <div class="f"><label>Milk Type</label><select id="gMilk"><option>Cow</option><option>Buffalo</option><option>Mixed</option></select></div>
+            </div>
+            <div class="fg3" style="margin-bottom:11px">
+              <div class="f"><label>Litre Min–Max</label><div style="display:flex;gap:5px"><input type="number" id="gLMin" value="37.5" step="0.5" style="width:78px"><input type="number" id="gLMax" value="43.5" step="0.5" style="width:78px"></div></div>
+              <div class="f"><label>Fat Min–Max</label><div style="display:flex;gap:5px"><input type="number" id="gFMin" value="4.1" step="0.1" style="width:70px"><input type="number" id="gFMax" value="4.9" step="0.1" style="width:70px"></div></div>
+              <div class="f"><label>Monthly Target (₹)</label><input type="number" id="gTarget" value="103000" step="500"></div>
+            </div>
+            <div class="btn-row"><button class="btn bg" onclick="showPM()">Set Per-Month →</button><button class="btn bgh" onclick="applyAll()">Apply to All</button></div>
+          </div>
+        </div>
+        <div class="card" id="pmCard" style="display:none">
+          <div class="ch"><h3>Per-Month Settings</h3><p>Each month gets unique values</p></div>
+          <div class="cb"><div class="pmgrid" id="pmGrid"></div><div class="btn-row"><button class="btn bg" onclick="doGenerate()">⚡ Generate All 12 Months</button></div></div>
+        </div>
+        <div id="genResult" style="display:none">
+          <div class="card"><div class="ch"><h3>Annual Summary</h3></div><div style="padding:0"><table class="tbl" id="annualT"></table></div></div>
+          <div class="card">
+            <div class="ch"><h3>Preview</h3><div style="display:flex;gap:4px;flex-wrap:wrap" id="pvBtns"></div></div>
+            <div id="pvArea"></div>
+            <div style="padding:10px 14px;border-top:1px solid var(--border);display:flex;gap:7px;flex-wrap:wrap">
+              <button class="btn bg bsm" onclick="dlThis()">↓ PDF This Month</button>
+              <button class="btn bb bsm" onclick="dlAll()">↓ All 12 PDFs</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="pg" id="ap-bills">
+        <div class="pt">Saved Bills</div><div class="ps">View, edit and re-download any saved bill</div>
+        <div class="card"><div class="ch"><h3>Filter</h3></div><div class="cb">
+          <div class="fg3">
+            <div class="f"><label>Farmer</label><select id="bFarmer"></select></div>
+            <div class="f"><label>Year</label><select id="bYear"><option value="25">2025</option><option value="26">2026</option><option value="24">2024</option></select></div>
+            <div class="f"><label>&nbsp;</label><button class="btn bgh" onclick="loadBills()">Load</button></div>
+          </div>
+        </div></div>
+        <div id="billsArea"></div>
+      </div>
+      <div class="pg" id="ap-payments">
+        <div class="pt">Payments</div><div class="ps">Record and track farmer payments</div>
+        <div class="card"><div class="ch"><h3>All Payments</h3><button class="btn bg bsm" onclick="openPay()">+ Record Payment</button></div><div style="padding:0"><table class="tbl" id="payT"></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- FARMER APP -->
+<div class="screen" id="scFarmerApp">
+  <div class="topbar">
+    <span style="font-size:18px">🥛</span>
+    <div class="tbt">Shri Krishna Dudh Dairy <span class="tbrole">FARMER</span></div>
+    <span style="font-size:12px;opacity:.8" id="fName2"></span>
+    <button class="tbbtn" onclick="logoutF()">Logout</button>
+  </div>
+  <div class="app-body">
+    <div class="sidebar">
+      <div class="ng">My Account</div>
+      <div class="ni active" id="fn-home" onclick="fNav('home')"><span class="ic">🏠</span>Dashboard</div>
+      <div class="ni" id="fn-req" onclick="fNav('req')"><span class="ic">📤</span>Request Bill</div>
+      <div class="ni" id="fn-bills" onclick="fNav('bills')"><span class="ic">📋</span>My Bills</div>
+      <div class="ni" id="fn-pay" onclick="fNav('pay')"><span class="ic">💰</span>My Payments</div>
+    </div>
+    <div class="content">
+      <div class="pg active" id="fp-home">
+        <div class="pt" id="fWelcome">My Dashboard</div><div class="ps">Your milk collection summary</div>
+        <div class="sg" id="fStats"></div>
+        <div class="card"><div class="ch"><h3>My Bills</h3></div><div style="padding:0"><table class="tbl" id="fBillT"></table></div></div>
+      </div>
+      <div class="pg" id="fp-req">
+        <div class="pt">Request a Bill</div><div class="ps">Submit payment details to get your monthly bill</div>
+        <div class="card"><div class="ch"><h3>New Bill Request</h3></div><div class="cb">
+          <div class="fg3" style="margin-bottom:10px">
+            <div class="f"><label>Month</label><select id="rqMon"><option>January</option><option>February</option><option>March</option><option>April</option><option selected>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div>
+            <div class="f"><label>Year</label><select id="rqYr"><option value="25">2025</option><option value="26">2026</option><option value="24">2024</option></select></div>
+            <div class="f"><label>Payment Mode</label><select id="rqMode"><option>Cash</option><option>UPI</option><option>Bank Transfer</option><option>Cheque</option></select></div>
+          </div>
+          <div class="fg2" style="margin-bottom:10px">
+            <div class="f"><label>Amount Paid (₹)</label><input type="number" id="rqAmt" placeholder="e.g. 103000"></div>
+            <div class="f"><label>UTR / Reference</label><input id="rqRef" placeholder="Transaction reference"></div>
+          </div>
+          <div class="f" style="margin-bottom:12px"><label>Notes</label><textarea id="rqNote" rows="2"></textarea></div>
+          <button class="btn bg" onclick="submitReq()">📤 Submit Request</button>
+        </div></div>
+        <div class="card"><div class="ch"><h3>My Request History</h3></div><div style="padding:0"><table class="tbl" id="fReqT"></table></div></div>
+      </div>
+      <div class="pg" id="fp-bills">
+        <div class="pt">My Bills</div><div class="ps">Download your approved bills as 58mm PDF</div>
+        <div id="fBillsArea"></div>
+      </div>
+      <div class="pg" id="fp-pay">
+        <div class="pt">My Payments</div><div class="ps">Payment history and dues</div>
+        <div class="sg" id="fPayStats"></div>
+        <div class="card"><div class="ch"><h3>Payment History</h3></div><div style="padding:0"><table class="tbl" id="fPayT"></table></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="mbg" id="fmModal"><div class="modal">
+  <div class="mh"><h3 id="fmTitle">Add Farmer</h3><button class="mclose" onclick="cm('fmModal')">×</button></div>
+  <div class="mb">
+    <input type="hidden" id="fmId">
+    <div class="fg2" style="margin-bottom:10px"><div class="f"><label>Dairy Name</label><input id="fmDairy" value="SHRI KRISHNA DUDH DAIRY"></div><div class="f"><label>Farmer Name</label><input id="fmName"></div></div>
+    <div class="fg2" style="margin-bottom:10px"><div class="f"><label>Code</label><input id="fmCode"></div><div class="f"><label>Mobile (= Password)</label><input id="fmMob"></div></div>
+    <div class="fg3" style="margin-bottom:10px">
+      <div class="f"><label>Milk</label><select id="fmMilk"><option>Cow</option><option>Buffalo</option><option>Mixed</option></select></div>
+      <div class="f"><label>Village</label><input id="fmVil"></div>
+      <div class="f"><label>Target (₹)</label><input type="number" id="fmTgt" value="103000"></div>
+    </div>
+    <div class="fg3">
+      <div class="f"><label>L Min</label><input type="number" id="fmLMin" value="37.5" step="0.5"></div>
+      <div class="f"><label>L Max</label><input type="number" id="fmLMax" value="43.5" step="0.5"></div>
+      <div class="f"><label>Fat Min/Max</label><div style="display:flex;gap:4px"><input type="number" id="fmFMin" value="4.1" step="0.1"><input type="number" id="fmFMax" value="4.9" step="0.1"></div></div>
+    </div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="cm('fmModal')">Cancel</button><button class="btn bg" onclick="saveFarmer()">Save</button></div>
+</div></div>
+
+<div class="mbg" id="reqModal"><div class="modal lg">
+  <div class="mh"><h3>Bill Request</h3><button class="mclose" onclick="cm('reqModal')">×</button></div>
+  <div class="mb" id="reqBody"></div>
+  <div class="mf" id="reqFoot"></div>
+</div></div>
+
+<div class="mbg" id="payModal"><div class="modal">
+  <div class="mh"><h3>Record Payment</h3><button class="mclose" onclick="cm('payModal')">×</button></div>
+  <div class="mb">
+    <div class="fg2" style="margin-bottom:10px"><div class="f"><label>Farmer</label><select id="pmF"></select></div><div class="f"><label>Month</label><select id="pmMon"><option>January</option><option>February</option><option>March</option><option>April</option><option>May</option><option>June</option><option>July</option><option>August</option><option>September</option><option>October</option><option>November</option><option>December</option></select></div></div>
+    <div class="fg2" style="margin-bottom:10px"><div class="f"><label>Year</label><select id="pmYr"><option value="25">2025</option><option value="26">2026</option></select></div><div class="f"><label>Amount (₹)</label><input type="number" id="pmAmt"></div></div>
+    <div class="fg2"><div class="f"><label>Mode</label><select id="pmMode"><option>Cash</option><option>Bank Transfer</option><option>UPI</option><option>Cheque</option></select></div><div class="f"><label>Reference</label><input id="pmRef"></div></div>
+  </div>
+  <div class="mf"><button class="btn bgh" onclick="cm('payModal')">Cancel</button><button class="btn bg" onclick="savePay()">Save</button></div>
+</div></div>
+
+<div class="mbg" id="editModal"><div class="modal lg">
+  <div class="mh"><h3 id="editTitle">Edit Bill</h3><button class="mclose" onclick="cm('editModal')">×</button></div>
+  <div class="mb"><div style="max-height:420px;overflow-y:auto"><table class="tbl iet" id="editT"></table></div></div>
+  <div class="mf"><button class="btn bgh" onclick="cm('editModal')">Cancel</button><button class="btn bg" onclick="saveEdit()">Save Changes</button></div>
+</div></div>
+
+<script>
+// ═══════════════════════ CONSTANTS
+const MN=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const MD=[31,28,31,30,31,30,31,31,30,31,30,31];
+const FS=[4.1,4.2,4.3,4.4,4.5,4.6,4.7,4.8,4.9];
+
+// ═══════════════════════ STATE
+let TOKEN=localStorage.getItem('dairy_token')||null;
+let ROLE=localStorage.getItem('dairy_role')||null;
+let USER=JSON.parse(localStorage.getItem('dairy_user')||'null');
+let genM=[],pvIdx=0,editBillId=null,farmersCache=[];
+
+// ═══════════════════════ API HELPER
+async function api(path,method='GET',body){
+  const opts={method,headers:{'Content-Type':'application/json'}};
+  if(TOKEN) opts.headers['Authorization']='Bearer '+TOKEN;
+  if(body) opts.body=JSON.stringify(body);
+  const r=await fetch('/api'+path,opts);
+  const data=await r.json();
+  if(!r.ok) throw new Error(data.error||'Request failed');
+  return data;
+}
+
+// ═══════════════════════ MATH (client-side for PDF)
+function sRng(seed){let s=seed>>>0;return()=>{s^=s<<13;s^=s>>17;s^=s<<5;return(s>>>0)/0xFFFFFFFF};}
+function calcAmt(l,fat){return Math.round(l*(fat*5+22.5)*100)/100;}
+function mkBillId(code,mi,yr){const b=code+String(mi+1).padStart(2,'0')+yr;let h=5381;for(const c of b)h=((h<<5)+h)+c.charCodeAt(0);return`DMS-${code}-${String(mi+1).padStart(2,'0')}${yr}-${Math.abs(h).toString(16).toUpperCase().slice(0,4)}`;}
+
+function genMonthClient(mi,yr,cfg){
+  const{lMin,lMax,fMin,fMax,target}=cfg;const days=MD[mi];
+  const vF=FS.filter(f=>f>=fMin-0.005&&f<=fMax+0.005);if(!vF.length)vF.push(4.5);
+  const seed=(parseInt(yr)*1000+mi+1)*7919+(mi+1)*31337;const rng=sRng(seed);
+  let recs=[];
+  for(let d=1;d<=days;d++){for(const sh of['M','E']){const l=Math.round((lMin+rng()*(lMax-lMin))*10)/10;const fat=vF[Math.floor(rng()*vF.length)];recs.push({day:d,shift:sh,litre:l,fat,amount:calcAmt(l,fat)});}}
+  const raw=recs.reduce((s,r)=>s+r.amount,0);const scale=target/raw;
+  recs.forEach(r=>{let nl=Math.round(r.litre*scale*10)/10;nl=Math.max(lMin*0.88,Math.min(lMax*1.12,nl));r.litre=nl;r.amount=calcAmt(nl,r.fat);});
+  const seen=new Set();
+  recs.forEach(r=>{const rng2=sRng(seed+r.day*200+r.shift.charCodeAt(0));let key=`${r.day}${r.shift}${r.litre}${r.fat}`;let t=0;while(seen.has(key)&&t<20){r.litre=Math.round((r.litre+(rng2()>0.5?0.1:-0.1))*10)/10;r.litre=Math.max(lMin*0.88,Math.min(lMax*1.12,r.litre));r.amount=calcAmt(r.litre,r.fat);key=`${r.day}${r.shift}${r.litre}${r.fat}`;t++;}seen.add(key);});
+  const tL=Math.round(recs.reduce((s,r)=>s+r.litre,0)*10)/10;const aF=Math.round(recs.reduce((s,r)=>s+r.fat,0)/recs.length*10)/10;const tA=Math.round(recs.reduce((s,r)=>s+r.amount,0)*100)/100;
+  return{records:recs,totalEntries:recs.length,totalLitre:tL,avgFat:aF,totalAmount:tA,days};
+}
+
+// ═══════════════════════ RECEIPT FORMAT (exact 58mm)
+function fmtReceipt(farmer,mi,yr,data){
+  const mo=String(mi+1).padStart(2,'0'),d2=String(MD[mi]).padStart(2,'0');
+  let L=[];
+  L.push(farmer.dairy_name||farmer.dairyName||'SHRI KRISHNA DUDH DAIRY');
+  L.push(`Code: ${farmer.farmer_code||farmer.code}`);
+  L.push(farmer.name);
+  L.push(`Date: 01-${mo}-${yr} To ${d2}-${mo}-${yr}`);
+  L.push('Shift: Morning To Evening');
+  L.push(`Milk: ${farmer.milk_type||farmer.milk||'Cow'}`);
+  L.push('__DASH__');
+  L.push(' D S    Litre   Fat   Amount');
+  L.push('__DASH__');
+  L.push('');
+  L.push(MN[mi]);
+  const recs=typeof data.records==='string'?JSON.parse(data.records):data.records;
+  recs.forEach(r=>{L.push(`${String(r.day).padStart(2,'0')} ${r.shift}     ${parseFloat(r.litre).toFixed(1)} ${parseFloat(r.fat).toFixed(1)}     ${parseFloat(r.amount).toFixed(2)}`);});
+  L.push('__DASH__');
+  L.push(`${data.total_entries||data.totalEntries}     ${parseFloat(data.total_litre||data.totalLitre).toFixed(1)}   ${parseFloat(data.avg_fat||data.avgFat).toFixed(1)}   ${parseFloat(data.total_amount||data.totalAmount).toFixed(2)}`);
+  L.push('__DASH__');
+  L.push(`Milk Amount: ${parseFloat(data.total_amount||data.totalAmount).toFixed(2)}`);
+  L.push('__DASH__');
+  return L;
+}
+
+// ═══════════════════════ PDF BUILD
+function buildPDF(farmer,mi,yr,data){
+  const{jsPDF}=window.jspdf;
+  const lines=fmtReceipt(farmer,mi,yr,data);
+  const LH=3.6,PW=58,MG=2.5,PH=MG*2+lines.length*LH+6;
+  const doc=new jsPDF({orientation:'portrait',unit:'mm',format:[PW,PH]});
+  let y=MG+3;
+  lines.forEach(line=>{
+    if(line==='__DASH__'){
+      doc.setLineDashPattern([0.9,0.38],0);doc.setLineWidth(0.2);doc.setDrawColor(0,0,0);
+      doc.line(MG,y-1.0,PW-MG,y-1.0);doc.setLineDashPattern([],0);y+=LH;return;
+    }
+    const tr=line.trim();
+    const bold=(tr===tr.toUpperCase()&&tr.length>3&&!/^\d/.test(tr)&&tr!==''&&!tr.startsWith('D S'))||tr.startsWith('Milk Amount')||tr===MN[mi];
+    doc.setFont('Courier',bold?'bold':'normal');doc.setFontSize(8);doc.setTextColor(0,0,0);
+    doc.text(line,MG,y);y+=LH;
+  });
+  return doc;
+}
+
+function rcptToHTML(L){return L.map(l=>l==='__DASH__'?`<span style="display:block;border-top:1.2px dashed #666;margin:1.5px 0;height:0;line-height:0"> </span>`:escH(l)+'\n').join('');}
+function escH(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+// ═══════════════════════ SCREEN NAV
+function showS(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');}
+
+// ═══════════════════════ TOAST
+function toast(msg,ms=2800){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),ms);}
+
+// ═══════════════════════ AUTH
+async function loginAdmin(){
+  const u=document.getElementById('adUser').value.trim();
+  const p=document.getElementById('adPass').value.trim();
+  try{
+    const d=await api('/auth/login','POST',{username:u,password:p});
+    if(d.user.role!=='admin'){showErr('adErr','Not an admin account');return;}
+    setSession(d);showS('scAdminApp');aNav('dash');
+  }catch(e){showErr('adErr',e.message);}
+}
+async function loginFarmer(){
+  const code=document.getElementById('fCode').value.trim();
+  const pass=document.getElementById('fPass').value.trim();
+  try{
+    const d=await api('/auth/login','POST',{username:code,password:pass});
+    if(d.user.role!=='farmer'){showErr('fErr','Not a farmer account');return;}
+    setSession(d);document.getElementById('fName2').textContent=d.user.name;
+    document.getElementById('fWelcome').textContent='Welcome, '+d.user.name;
+    showS('scFarmerApp');fNav('home');
+  }catch(e){showErr('fErr',e.message);}
+}
+async function regFarmer(){
+  const name=document.getElementById('rName').value.trim();
+  const mobile=document.getElementById('rMobile').value.trim();
+  if(!name||!mobile){alert('Name and mobile required');return;}
+  try{
+    const d=await api('/auth/register','POST',{name,mobile,village:document.getElementById('rVillage').value,milk_type:document.getElementById('rMilk').value,dairy_name:document.getElementById('rDairy').value});
+    alert('✓ Registered!\nYour Code: '+d.user.farmer_code+'\nPassword: '+mobile);
+    setSession(d);document.getElementById('fName2').textContent=d.user.name;
+    document.getElementById('fWelcome').textContent='Welcome, '+d.user.name;
+    showS('scFarmerApp');fNav('home');
+  }catch(e){alert(e.message);}
+}
+function setSession(d){TOKEN=d.token;ROLE=d.user.role;USER=d.user;localStorage.setItem('dairy_token',TOKEN);localStorage.setItem('dairy_role',ROLE);localStorage.setItem('dairy_user',JSON.stringify(USER));}
+function clearSession(){TOKEN=null;ROLE=null;USER=null;localStorage.removeItem('dairy_token');localStorage.removeItem('dairy_role');localStorage.removeItem('dairy_user');}
+function logoutA(){clearSession();showS('scLanding');}
+function logoutF(){clearSession();showS('scLanding');}
+function fTab(t){document.querySelectorAll('.atab').forEach((e,i)=>e.classList.toggle('active',(i===0&&t==='login')||(i===1&&t==='register')));document.getElementById('fLoginF').style.display=t==='login'?'block':'none';document.getElementById('fRegF').style.display=t==='register'?'block':'none';}
+
+// ═══════════════════════ CHECKER AUTH
+async function loginChecker(){
+  const u=document.getElementById('vUser').value.trim();
+  const p=document.getElementById('vPass').value.trim();
+  try{
+    const d=await api('/auth/login','POST',{username:u,password:p});
+    if(d.user.role!=='checker'&&d.user.role!=='admin'){showErr('vErr','Not authorized');return;}
+    TOKEN=d.token;ROLE=d.user.role;USER=d.user;
+    document.getElementById('vLoginPanel').style.display='none';
+    document.getElementById('vVerifyPanel').style.display='block';
+  }catch(e){showErr('vErr',e.message);}
+}
+function logoutChecker(){document.getElementById('vLoginPanel').style.display='block';document.getElementById('vVerifyPanel').style.display='none';document.getElementById('vUser').value='';document.getElementById('vPass').value='';document.getElementById('vResult').innerHTML='';TOKEN=null;}
+
+// ═══════════════════════ ADMIN NAV
+function aNav(pg){
+  document.querySelectorAll('#scAdminApp .pg').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#scAdminApp .ni').forEach(n=>n.classList.remove('active'));
+  const p=document.getElementById('ap-'+pg),n=document.getElementById('an-'+pg);
+  if(p)p.classList.add('active');if(n)n.classList.add('active');
+  if(pg==='dash')renderDash();if(pg==='farmers')renderFarmers();if(pg==='requests')renderReqs();
+  if(pg==='payments')renderPays();if(pg==='bills'){popFS();renderBillsPage();}if(pg==='generate')popFS();
+}
+function fNav(pg){
+  document.querySelectorAll('#scFarmerApp .pg').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('#scFarmerApp .ni').forEach(n=>n.classList.remove('active'));
+  const p=document.getElementById('fp-'+pg),n=document.getElementById('fn-'+pg);
+  if(p)p.classList.add('active');if(n)n.classList.add('active');
+  if(pg==='home')renderFHome();if(pg==='req')renderFReqs();if(pg==='bills')renderFBills();if(pg==='pay')renderFPay();
+}
+
+// ═══════════════════════ ADMIN DASHBOARD
+async function renderDash(){
+  document.getElementById('aDashStats').innerHTML=`<div class="loading"><span class="spinner"></span>Loading...</div>`;
+  try{
+    const d=await api('/dashboard');
+    document.getElementById('aDashStats').innerHTML=`
+      <div class="sc cg"><div class="sl">Farmers</div><div class="sv">${d.farmers}</div><div class="ss">Registered</div></div>
+      <div class="sc ca"><div class="sl">Pending</div><div class="sv">${d.pending_requests}</div><div class="ss">Bill requests</div></div>
+      <div class="sc cb"><div class="sl">Bills</div><div class="sv">${d.bills}</div><div class="ss">Generated</div></div>
+      <div class="sc cr"><div class="sl">Total</div><div class="sv">₹${(d.bills_total/1000).toFixed(0)}K</div><div class="ss">All bills</div></div>`;
+    const rb=document.getElementById('rBadge');if(rb){rb.textContent=d.pending_requests;rb.style.display=d.pending_requests?'inline':'none';}
+    document.getElementById('aDashReq').innerHTML=`<tr><th>Farmer</th><th>Month</th><th>Status</th></tr>`+(d.recent_requests.length?d.recent_requests.map(r=>`<tr><td>${r.farmer_name}</td><td>${r.month_name} 20${r.year}</td><td><span class="tag ta">${r.status}</span></td></tr>`).join(''):`<tr><td colspan="3" style="padding:14px;text-align:center;color:var(--muted)">No pending</td></tr>`);
+    document.getElementById('aDashPay').innerHTML=`<tr><th>Farmer</th><th>Amount</th><th>Status</th></tr>`+(d.recent_payments.length?d.recent_payments.map(p=>`<tr><td>${p.farmer_name}</td><td class="mono">₹${parseFloat(p.amount).toFixed(2)}</td><td><span class="tag tg">${p.status}</span></td></tr>`).join(''):`<tr><td colspan="3" style="padding:14px;text-align:center;color:var(--muted)">No payments</td></tr>`);
+  }catch(e){document.getElementById('aDashStats').innerHTML=`<div class="loading">Error: ${e.message}</div>`;}
+}
+
+// ═══════════════════════ FARMERS
+async function renderFarmers(){
+  const area=document.getElementById('farmT');
+  area.innerHTML=`<tr><td colspan="7" class="loading"><span class="spinner"></span>Loading...</td></tr>`;
+  try{
+    farmersCache=await api('/farmers');
+    area.innerHTML=`<tr><th>Code</th><th>Name</th><th>Village</th><th>Mobile</th><th>Milk</th><th>Target</th><th>Action</th></tr>`+(farmersCache.length?farmersCache.map(f=>`<tr><td class="mono">${f.farmer_code}</td><td><strong>${f.name}</strong></td><td>${f.village||'—'}</td><td class="mono">${f.mobile}</td><td>${f.milk_type}</td><td class="mono">₹${parseFloat(f.target||0).toLocaleString('en-IN')}</td><td><button class="btn bgh bxs" onclick="openFM('${f.id}')">✏️</button> <button class="btn br bxs" onclick="delF('${f.id}')">🗑</button></td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--muted)">No farmers</td></tr>`);
+  }catch(e){area.innerHTML=`<tr><td colspan="7" style="padding:14px;color:var(--r1)">${e.message}</td></tr>`;}
+}
+function openFM(id){
+  const isEdit=!!id;document.getElementById('fmTitle').textContent=isEdit?'Edit Farmer':'Add Farmer';document.getElementById('fmId').value=id||'';
+  if(isEdit){const f=farmersCache.find(x=>x.id===id);if(!f)return;document.getElementById('fmDairy').value=f.dairy_name||'';document.getElementById('fmName').value=f.name;document.getElementById('fmCode').value=f.farmer_code;document.getElementById('fmMob').value='';document.getElementById('fmMilk').value=f.milk_type;document.getElementById('fmVil').value=f.village||'';document.getElementById('fmTgt').value=f.target;document.getElementById('fmLMin').value=f.l_min;document.getElementById('fmLMax').value=f.l_max;document.getElementById('fmFMin').value=f.f_min;document.getElementById('fmFMax').value=f.f_max;}
+  else{['fmName','fmCode','fmMob','fmVil'].forEach(id=>document.getElementById(id).value='');document.getElementById('fmDairy').value='SHRI KRISHNA DUDH DAIRY';}
+  om('fmModal');
+}
+async function saveFarmer(){
+  const id=document.getElementById('fmId').value;
+  const body={name:document.getElementById('fmName').value.trim(),code:document.getElementById('fmCode').value.trim(),mobile:document.getElementById('fmMob').value.trim(),dairy_name:document.getElementById('fmDairy').value.trim().toUpperCase(),milk_type:document.getElementById('fmMilk').value,village:document.getElementById('fmVil').value.trim(),target:parseFloat(document.getElementById('fmTgt').value)||103000,l_min:parseFloat(document.getElementById('fmLMin').value)||37.5,l_max:parseFloat(document.getElementById('fmLMax').value)||43.5,f_min:parseFloat(document.getElementById('fmFMin').value)||4.1,f_max:parseFloat(document.getElementById('fmFMax').value)||4.9};
+  if(!body.name||!body.code){alert('Name and Code required');return;}
+  try{
+    if(id){await api('/farmers/'+id,'PUT',body);}else{await api('/farmers','POST',body);}
+    cm('fmModal');renderFarmers();popFS();toast('✓ Farmer saved');
+  }catch(e){alert(e.message);}
+}
+async function delF(id){
+  if(!confirm('Delete this farmer?'))return;
+  try{await api('/farmers/'+id,'DELETE');renderFarmers();toast('Farmer deleted');}catch(e){alert(e.message);}
+}
+
+// ═══════════════════════ POPULATE SELECTS
+async function popFS(){
+  try{
+    if(!farmersCache.length)farmersCache=await api('/farmers');
+    const opts=farmersCache.map(f=>`<option value="${f.id}">${f.name} (${f.farmer_code})</option>`).join('');
+    ['gFarmer','bFarmer','pmF'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts||'<option>No farmers</option>';});
+  }catch{}
+}
+async function loadFDefs(){
+  const id=document.getElementById('gFarmer').value;
+  const f=farmersCache.find(x=>x.id===id);if(!f)return;
+  document.getElementById('gLMin').value=f.l_min;document.getElementById('gLMax').value=f.l_max;document.getElementById('gFMin').value=f.f_min;document.getElementById('gFMax').value=f.f_max;document.getElementById('gTarget').value=f.target;document.getElementById('gMilk').value=f.milk_type;
+}
+
+// ═══════════════════════ GENERATE
+function showPM(){
+  const lMin=document.getElementById('gLMin').value,lMax=document.getElementById('gLMax').value,fMin=document.getElementById('gFMin').value,fMax=document.getElementById('gFMax').value,target=parseFloat(document.getElementById('gTarget').value);
+  let html='';
+  for(let i=0;i<12;i++){const v=Math.round((target+(i-5.5)*180)/100)*100;html+=`<div class="pmcard"><div class="pmch"><span>${MN[i].substring(0,3)}</span><small>${MD[i]}d</small></div><div class="pmcb"><div class="pmf"><label>Target ₹</label><input type="number" id="pm_t${i}" value="${v}" step="500"></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:4px"><div class="pmf"><label>L Min</label><input type="number" id="pm_lmin${i}" value="${lMin}" step="0.5"></div><div class="pmf"><label>L Max</label><input type="number" id="pm_lmax${i}" value="${lMax}" step="0.5"></div><div class="pmf"><label>F Min</label><input type="number" id="pm_fmin${i}" value="${fMin}" step="0.1"></div><div class="pmf"><label>F Max</label><input type="number" id="pm_fmax${i}" value="${fMax}" step="0.1"></div></div></div></div>`;}
+  document.getElementById('pmGrid').innerHTML=html;document.getElementById('pmCard').style.display='block';document.getElementById('pmCard').scrollIntoView({behavior:'smooth'});
+}
+function applyAll(){
+  const lMin=document.getElementById('gLMin').value,lMax=document.getElementById('gLMax').value,fMin=document.getElementById('gFMin').value,fMax=document.getElementById('gFMax').value,target=document.getElementById('gTarget').value;
+  for(let i=0;i<12;i++){['t','lmin','lmax','fmin','fmax'].forEach(k=>{const el=document.getElementById(`pm_${k}${i}`);if(el)el.value=k==='t'?target:k==='lmin'?lMin:k==='lmax'?lMax:k==='fmin'?fMin:fMax;});}
+}
+async function doGenerate(){
+  const fid=document.getElementById('gFarmer').value;const f=farmersCache.find(x=>x.id===fid);if(!f){alert('Select a farmer');return;}
+  const yr=document.getElementById('gYear').value;
+  const months=[];
+  for(let i=0;i<12;i++){months.push({month_index:i,l_min:parseFloat(document.getElementById(`pm_lmin${i}`).value),l_max:parseFloat(document.getElementById(`pm_lmax${i}`).value),f_min:parseFloat(document.getElementById(`pm_fmin${i}`).value),f_max:parseFloat(document.getElementById(`pm_fmax${i}`).value),target:parseFloat(document.getElementById(`pm_t${i}`).value)});}
+  try{
+    const res=await api('/bills','POST',{farmer_id:fid,year:yr,months});
+    toast('✓ '+res.generated+' months generated and saved to database!');
+    // Generate client-side preview data
+    genM=months.map(cfg=>{
+      const data=genMonthClient(cfg.month_index,yr,{lMin:cfg.l_min,lMax:cfg.l_max,fMin:cfg.f_min,fMax:cfg.f_max,target:cfg.target});
+      const billId=mkBillId(f.farmer_code,cfg.month_index,yr);
+      return{mi:cfg.month_index,yr,farmer:f,data,billId};
+    });
+    renderAnnual();renderPvBtns();
+    document.getElementById('genResult').style.display='block';document.getElementById('pmCard').style.display='none';document.getElementById('genResult').scrollIntoView({behavior:'smooth'});
+  }catch(e){alert(e.message);}
+}
+function renderAnnual(){
+  let html=`<tr><th>#</th><th>Month</th><th>Days</th><th>Entries</th><th>Litre</th><th>Fat</th><th>Milk Amount (₹)</th></tr>`;let sl=0,sa=0;
+  genM.forEach((g,i)=>{sl+=g.data.totalLitre;sa+=g.data.totalAmount;html+=`<tr><td>${i+1}</td><td><strong>${MN[g.mi]}</strong></td><td>${g.data.days}</td><td>${g.data.totalEntries}</td><td class="mono">${g.data.totalLitre.toFixed(1)}</td><td class="mono">${g.data.avgFat.toFixed(1)}</td><td class="mono" style="font-weight:700">₹${g.data.totalAmount.toFixed(2)}</td></tr>`;});
+  html+=`<tr style="background:var(--gL)"><td colspan="4"><strong>Annual Total</strong></td><td class="mono"><strong>${Math.round(sl*10)/10} L</strong></td><td>—</td><td class="mono"><strong>₹${Math.round(sa*100)/100}</strong></td></tr>`;
+  document.getElementById('annualT').innerHTML=html;
+}
+function renderPvBtns(){pvIdx=0;document.getElementById('pvBtns').innerHTML=genM.map((g,i)=>`<button class="btn bsm ${i===0?'bg':'bgh'}" id="pvb${i}" onclick="selPv(${i})">${MN[g.mi].substring(0,3)}</button>`).join('');showPv(0);}
+function selPv(i){pvIdx=i;document.querySelectorAll('[id^=pvb]').forEach((b,j)=>b.className='btn bsm '+(j===i?'bg':'bgh'));showPv(i);}
+function showPv(i){
+  const g=genM[i];if(!g)return;
+  const lines=fmtReceipt(g.farmer,g.mi,g.yr,g.data);
+  document.getElementById('pvArea').innerHTML=`<div class="rcpt-wrap"><div class="rcpt">${rcptToHTML(lines)}</div><div style="padding:10px;min-width:170px;font-size:12px"><p style="font-weight:700;color:var(--g1);margin-bottom:7px">${MN[g.mi]} 20${g.yr}</p><table style="border-collapse:collapse;width:100%"><tr><td style="padding:3px 0;color:var(--muted)">Entries</td><td class="mono">${g.data.totalEntries}</td></tr><tr><td style="padding:3px 0;color:var(--muted)">Litre</td><td class="mono">${g.data.totalLitre.toFixed(1)} L</td></tr><tr><td style="padding:3px 0;color:var(--muted)">Amount</td><td class="mono" style="font-weight:700;color:var(--g1)">₹${g.data.totalAmount.toFixed(2)}</td></tr></table></div></div>`;
+}
+function dlThis(){const g=genM[pvIdx];if(!g)return;buildPDF(g.farmer,g.mi,g.yr,g.data).save(`${g.farmer.farmer_code}_${MN[g.mi]}_20${g.yr}.pdf`);}
+function dlAll(){genM.forEach(g=>buildPDF(g.farmer,g.mi,g.yr,g.data).save(`${g.farmer.farmer_code}_${MN[g.mi]}_20${g.yr}.pdf`));}
+
+// ═══════════════════════ BILL REQUESTS (ADMIN)
+async function renderReqs(){
+  const area=document.getElementById('reqT');area.innerHTML=`<tr><td colspan="8" class="loading"><span class="spinner"></span>Loading...</td></tr>`;
+  try{
+    const reqs=await api('/requests');
+    const rb=document.getElementById('rBadge');const p=reqs.filter(r=>r.status==='pending').length;if(rb){rb.textContent=p;rb.style.display=p?'inline':'none';}
+    area.innerHTML=`<tr><th>Date</th><th>Farmer</th><th>Month</th><th>Amount</th><th>Mode</th><th>Ref</th><th>Status</th><th></th></tr>`+(reqs.length?reqs.map(r=>`<tr><td style="font-size:10px">${r.created_at?.substring(0,10)||'—'}</td><td><strong>${r.farmer_name}</strong><br><span style="font-size:10px;color:var(--muted)">${r.farmer_code}</span></td><td>${r.month_name} 20${r.year}</td><td class="mono">₹${parseFloat(r.amount_paid||0).toFixed(2)}</td><td>${r.payment_mode||'—'}</td><td class="mono" style="font-size:10px">${r.reference||'—'}</td><td><span class="tag ${r.status==='pending'?'ta':r.status==='approved'?'tg':'tr2'}">${r.status}</span></td><td><button class="btn bgh bxs" onclick="openReqDet('${r.id}')">View</button></td></tr>`).join(''):`<tr><td colspan="8" style="text-align:center;padding:18px;color:var(--muted)">No requests</td></tr>`);
+  }catch(e){area.innerHTML=`<tr><td colspan="8" style="padding:14px;color:var(--r1)">${e.message}</td></tr>`;}
+}
+async function openReqDet(id){
+  const reqs=await api('/requests');const r=reqs.find(x=>x.id===id);if(!r)return;
+  document.getElementById('reqBody').innerHTML=`<div class="fg2" style="margin-bottom:10px"><div class="f" style="gap:2px"><label>Farmer</label><strong>${r.farmer_name} (${r.farmer_code})</strong></div><div class="f" style="gap:2px"><label>Month</label><strong>${r.month_name} 20${r.year}</strong></div><div class="f" style="gap:2px"><label>Amount Paid</label><strong class="mono">₹${parseFloat(r.amount_paid||0).toFixed(2)}</strong></div><div class="f" style="gap:2px"><label>Mode</label><strong>${r.payment_mode||'—'}</strong></div><div class="f" style="gap:2px"><label>Reference</label><strong class="mono">${r.reference||'—'}</strong></div><div class="f" style="gap:2px"><label>Status</label><span class="tag ${r.status==='pending'?'ta':r.status==='approved'?'tg':'tr2'}">${r.status}</span></div></div>${r.note?`<div style="background:var(--bg);padding:9px;border-radius:6px;font-size:12px;margin-bottom:10px"><strong>Note:</strong> ${r.note}</div>`:''}${r.status==='pending'?`<div class="f" style="margin-top:10px"><label>Admin Note</label><textarea id="aNoteI" rows="2"></textarea></div>`:''}${r.admin_note?`<div style="background:var(--bL);padding:9px;border-radius:6px;font-size:12px;margin-top:8px"><strong>Admin Note:</strong> ${r.admin_note}</div>`:''}`;
+  document.getElementById('reqFoot').innerHTML=r.status==='pending'?`<button class="btn bgh" onclick="cm('reqModal')">Close</button><button class="btn br bsm" onclick="resolveR('${id}','rejected')">Reject</button><button class="btn bg bsm" onclick="approveR('${id}')">✓ Approve &amp; Generate</button>`:`<button class="btn bgh" onclick="cm('reqModal')">Close</button>`;
+  om('reqModal');
+}
+async function resolveR(id,status){
+  try{await api('/requests/'+id,'PUT',{status,admin_note:document.getElementById('aNoteI')?.value||''});cm('reqModal');renderReqs();toast(status==='approved'?'✓ Bill generated!':'Request rejected');}catch(e){alert(e.message);}
+}
+async function approveR(id){await resolveR(id,'approved');}
+
+// ═══════════════════════ SAVED BILLS
+function renderBillsPage(){document.getElementById('billsArea').innerHTML='';}
+async function loadBills(){
+  const fid=document.getElementById('bFarmer').value;const yr=document.getElementById('bYear').value;if(!fid)return;
+  const area=document.getElementById('billsArea');area.innerHTML=`<div class="loading"><span class="spinner"></span>Loading...</div>`;
+  try{
+    const bills=await api(`/bills?farmer_id=${fid}&year=${yr}`);
+    const f=farmersCache.find(x=>x.id===fid);
+    if(!bills.length){area.innerHTML=`<div class="card"><div class="cb" style="text-align:center;padding:28px;color:var(--muted)">No bills for this farmer/year.</div></div>`;return;}
+    let html='<div class="mgrid">';
+    for(let i=0;i<12;i++){
+      const m=bills.find(b=>parseInt(b.month_index)===i);
+      if(m){html+=`<div class="mcard"><div class="mch"><span>${MN[i]}</span><small>20${yr} ✓</small></div><div class="mcb"><div>Entries: ${m.total_entries}</div><div>Litre: ${parseFloat(m.total_litre).toFixed(1)}</div><div>Fat: ${parseFloat(m.avg_fat).toFixed(1)}</div><div class="ma">₹${parseFloat(m.total_amount).toFixed(2)}</div><div style="margin-top:6px;display:flex;gap:4px"><button class="btn bg bxs" onclick="dlSaved('${m.id}','${fid}')">↓ PDF</button><button class="btn bgh bxs" onclick="openEdit('${m.id}')">✏️ Edit</button></div></div></div>`;}
+      else{html+=`<div class="mcard" style="opacity:.4"><div class="mch"><span>${MN[i]}</span><small>Not generated</small></div><div class="mcb" style="color:var(--muted)">No data</div></div>`;}
+    }
+    html+='</div>';area.innerHTML=html;
+  }catch(e){area.innerHTML=`<div class="loading" style="color:var(--r1)">${e.message}</div>`;}
+}
+async function dlSaved(billId,fid){
+  try{
+    const bill=await api('/bills/'+billId);
+    const f=farmersCache.find(x=>x.id===fid)||{name:bill.farmer_name,farmer_code:bill.farmer_code,dairy_name:bill.dairy_name,milk_type:bill.milk_type};
+    buildPDF(f,parseInt(bill.month_index),bill.year,bill).save(`${bill.farmer_code}_${bill.month_name}_20${bill.year}.pdf`);
+  }catch(e){alert(e.message);}
+}
+async function openEdit(billId){
+  try{
+    const bill=await api('/bills/'+billId);editBillId=billId;
+    document.getElementById('editTitle').textContent=`Edit: ${bill.farmer_name} — ${bill.month_name} 20${bill.year}`;
+    const recs=typeof bill.records==='string'?JSON.parse(bill.records):bill.records;
+    let html=`<tr><th>Day</th><th>Shift</th><th>Litre</th><th>Fat</th><th>Amount</th></tr>`;
+    recs.forEach((r,i)=>{html+=`<tr><td>${String(r.day).padStart(2,'0')}</td><td><span class="tag ${r.shift==='M'?'tb2':'tg'}">${r.shift}</span></td><td><input type="number" id="el${i}" value="${r.litre}" step="0.1" onchange="reCalc(${i})"></td><td><input type="number" id="ef${i}" value="${r.fat}" step="0.1" onchange="reCalc(${i})"></td><td class="mono" id="ea${i}">${parseFloat(r.amount).toFixed(2)}</td></tr>`;});
+    document.getElementById('editT').innerHTML=html;
+    om('editModal');
+  }catch(e){alert(e.message);}
+}
+function reCalc(i){document.getElementById(`ea${i}`).textContent=calcAmt(parseFloat(document.getElementById(`el${i}`).value)||0,parseFloat(document.getElementById(`ef${i}`).value)||0).toFixed(2);}
+async function saveEdit(){
+  if(!editBillId)return;
+  try{
+    const rows=document.getElementById('editT').querySelectorAll('tr');const recs=[];
+    rows.forEach((row,i)=>{if(i===0)return;const l=parseFloat(document.getElementById(`el${i-1}`)?.value)||0;const fat=parseFloat(document.getElementById(`ef${i-1}`)?.value)||0;const cells=row.querySelectorAll('td');if(cells.length>=2){recs.push({day:parseInt(cells[0].textContent),shift:cells[1].textContent.trim(),litre:l,fat,amount:calcAmt(l,fat)});}});
+    await api('/bills/'+editBillId,'PUT',{records:recs});
+    cm('editModal');loadBills();toast('✓ Bill updated!');
+  }catch(e){alert(e.message);}
+}
+
+// ═══════════════════════ PAYMENTS
+async function renderPays(){
+  const area=document.getElementById('payT');area.innerHTML=`<tr><td colspan="7" class="loading"><span class="spinner"></span>Loading...</td></tr>`;
+  try{
+    const pays=await api('/payments');
+    area.innerHTML=`<tr><th>Date</th><th>Farmer</th><th>Month</th><th>Amount</th><th>Mode</th><th>Status</th><th>Ref</th></tr>`+(pays.length?pays.map(p=>`<tr><td style="font-size:10px">${p.created_at?.substring(0,10)||'—'}</td><td>${p.farmer_name}</td><td>${p.month_name}</td><td class="mono">₹${parseFloat(p.amount||0).toFixed(2)}</td><td>${p.payment_mode||'—'}</td><td><span class="pdot pd-${p.status}"></span>${p.status}</td><td style="font-size:10px;color:var(--muted)">${p.reference||'—'}</td></tr>`).join(''):`<tr><td colspan="7" style="text-align:center;padding:18px;color:var(--muted)">No payments</td></tr>`);
+  }catch(e){area.innerHTML=`<tr><td colspan="7" style="padding:14px;color:var(--r1)">${e.message}</td></tr>`;}
+}
+function openPay(){popFS();om('payModal');}
+async function savePay(){
+  const fid=document.getElementById('pmF').value;
+  try{await api('/payments','POST',{farmer_id:fid,month_name:document.getElementById('pmMon').value,year:document.getElementById('pmYr').value,amount:parseFloat(document.getElementById('pmAmt').value)||0,payment_mode:document.getElementById('pmMode').value,reference:document.getElementById('pmRef').value});cm('payModal');renderPays();toast('✓ Payment recorded');}catch(e){alert(e.message);}
+}
+
+// ═══════════════════════ FARMER HOME
+async function renderFHome(){
+  document.getElementById('fStats').innerHTML=`<div class="loading"><span class="spinner"></span>Loading...</div>`;
+  try{
+    const [bills,pays,reqs]=await Promise.all([api('/bills'),api('/payments'),api('/requests')]);
+    let ba=0;bills.forEach(b=>ba+=parseFloat(b.total_amount||0));
+    let pa=0;pays.filter(p=>p.status==='paid').forEach(p=>pa+=parseFloat(p.amount||0));
+    document.getElementById('fStats').innerHTML=`<div class="sc cg"><div class="sl">My Bills</div><div class="sv">${bills.length}</div></div><div class="sc cb"><div class="sl">Total Milk</div><div class="sv">₹${(ba/1000).toFixed(1)}K</div></div><div class="sc ca"><div class="sl">Paid</div><div class="sv">₹${(pa/1000).toFixed(1)}K</div></div><div class="sc cr"><div class="sl">Requests</div><div class="sv">${reqs.length}</div></div>`;
+    let html=`<tr><th>Month</th><th>Litre</th><th>Fat</th><th>Amount</th><th>Payment</th><th>PDF</th></tr>`;
+    if(bills.length){bills.forEach(b=>{const pay=pays.find(p=>p.month_name===b.month_name);html+=`<tr><td><strong>${b.month_name} 20${b.year}</strong></td><td class="mono">${parseFloat(b.total_litre).toFixed(1)}</td><td class="mono">${parseFloat(b.avg_fat).toFixed(1)}</td><td class="mono" style="font-weight:700">₹${parseFloat(b.total_amount).toFixed(2)}</td><td><span class="pdot pd-${pay?.status||'pending'}"></span>${pay?.status||'pending'}</td><td><button class="btn bg bxs" onclick="dlFarmerBill('${b.id}')">↓ PDF</button></td></tr>`;});}
+    else html+=`<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--muted)">No bills yet. Request one below.</td></tr>`;
+    document.getElementById('fBillT').innerHTML=html;
+  }catch(e){document.getElementById('fStats').innerHTML=`<div class="loading" style="color:var(--r1)">${e.message}</div>`;}
+}
+async function renderFReqs(){
+  const area=document.getElementById('fReqT');
+  try{
+    const reqs=await api('/requests');
+    area.innerHTML=`<tr><th>Date</th><th>Month</th><th>Amount</th><th>Status</th><th>Admin Note</th></tr>`+(reqs.length?reqs.map(r=>`<tr><td style="font-size:10px">${r.created_at?.substring(0,10)||'—'}</td><td>${r.month_name} 20${r.year}</td><td class="mono">₹${parseFloat(r.amount_paid||0).toFixed(2)}</td><td><span class="tag ${r.status==='pending'?'ta':r.status==='approved'?'tg':'tr2'}">${r.status}</span></td><td style="font-size:11px;color:var(--muted)">${r.admin_note||'—'}</td></tr>`).join(''):`<tr><td colspan="5" style="text-align:center;padding:14px;color:var(--muted)">No requests</td></tr>`);
+  }catch(e){}
+}
+async function submitReq(){
+  const month=document.getElementById('rqMon').value;const yr=document.getElementById('rqYr').value;const amount=parseFloat(document.getElementById('rqAmt').value)||0;
+  if(!amount){alert('Enter the amount paid');return;}
+  try{
+    await api('/requests','POST',{month_name:month,month_index:MN.indexOf(month),year:yr,amount_paid:amount,payment_mode:document.getElementById('rqMode').value,reference:document.getElementById('rqRef').value,note:document.getElementById('rqNote').value});
+    toast('✓ Request submitted!');renderFReqs();
+    document.getElementById('rqAmt').value='';document.getElementById('rqRef').value='';document.getElementById('rqNote').value='';
+  }catch(e){alert(e.message);}
+}
+async function renderFBills(){
+  const area=document.getElementById('fBillsArea');area.innerHTML=`<div class="loading"><span class="spinner"></span>Loading...</div>`;
+  try{
+    const bills=await api('/bills');
+    if(!bills.length){area.innerHTML=`<div class="card"><div class="cb" style="text-align:center;padding:28px;color:var(--muted)">No bills yet. <button class="btn bg bsm" onclick="fNav('req')">Request a Bill →</button></div></div>`;return;}
+    const byYear={};bills.forEach(b=>{if(!byYear[b.year])byYear[b.year]=[];byYear[b.year].push(b);});
+    let html='';
+    Object.entries(byYear).forEach(([yr,bs])=>{html+=`<div class="card"><div class="ch"><h3>Year 20${yr}</h3></div><div class="cb"><div class="mgrid">`;bs.forEach(b=>{html+=`<div class="mcard"><div class="mch"><span>${b.month_name}</span><small>20${yr}</small></div><div class="mcb"><div>Entries: ${b.total_entries}</div><div class="ma">₹${parseFloat(b.total_amount).toFixed(2)}</div><button class="btn bg bxs" onclick="dlFarmerBill('${b.id}')" style="margin-top:5px">↓ PDF</button></div></div>`;});html+='</div></div></div>';});
+    area.innerHTML=html;
+  }catch(e){area.innerHTML=`<div class="loading" style="color:var(--r1)">${e.message}</div>`;}
+}
+async function dlFarmerBill(billId){
+  try{
+    const bill=await api('/bills/'+billId);
+    const farmer={name:bill.farmer_name,farmer_code:bill.farmer_code,dairy_name:bill.dairy_name,milk_type:bill.milk_type};
+    buildPDF(farmer,parseInt(bill.month_index),bill.year,bill).save(`${bill.farmer_code}_${bill.month_name}_20${bill.year}.pdf`);
+  }catch(e){alert(e.message);}
+}
+async function renderFPay(){
+  const area1=document.getElementById('fPayStats'),area2=document.getElementById('fPayT');
+  try{
+    const [bills,pays]=await Promise.all([api('/bills'),api('/payments')]);
+    let totDue=0,totPaid=0;bills.forEach(b=>totDue+=parseFloat(b.total_amount||0));pays.filter(p=>p.status==='paid').forEach(p=>totPaid+=parseFloat(p.amount||0));const bal=totDue-totPaid;
+    area1.innerHTML=`<div class="sc cg"><div class="sl">Total Due</div><div class="sv">₹${(totDue/1000).toFixed(1)}K</div></div><div class="sc cb"><div class="sl">Paid</div><div class="sv">₹${(totPaid/1000).toFixed(1)}K</div></div><div class="sc ${bal>0?'ca':'cg'}"><div class="sl">Balance</div><div class="sv">₹${(Math.abs(bal)/1000).toFixed(1)}K</div><div class="ss">${bal>0?'Pending':'Settled'}</div></div><div class="sc cr"><div class="sl">Transactions</div><div class="sv">${pays.length}</div></div>`;
+    area2.innerHTML=`<tr><th>Date</th><th>Month</th><th>Amount</th><th>Mode</th><th>Status</th><th>Ref</th></tr>`+(pays.length?pays.map(p=>`<tr><td style="font-size:10px">${p.created_at?.substring(0,10)||'—'}</td><td>${p.month_name}</td><td class="mono">₹${parseFloat(p.amount||0).toFixed(2)}</td><td>${p.payment_mode||'—'}</td><td><span class="pdot pd-${p.status}"></span>${p.status}</td><td style="font-size:10px">${p.reference||'—'}</td></tr>`).join(''):`<tr><td colspan="6" style="text-align:center;padding:18px;color:var(--muted)">No payments</td></tr>`);
+  }catch(e){}
+}
+
+// ═══════════════════════ VERIFY (calls real API)
+async function doVerify(){
+  const code=document.getElementById('vCode').value.trim();
+  const mi=document.getElementById('vMon').value;
+  const yr=document.getElementById('vYear').value;
+  const res=document.getElementById('vResult');
+  if(!code||mi===''){res.innerHTML=`<div style="background:var(--rL);border:1px solid #ef9a9a;border-radius:8px;padding:12px;text-align:center;color:var(--r1);margin-top:12px">Enter Farmer Code and select Month</div>`;return;}
+  res.innerHTML=`<div class="loading" style="margin-top:12px"><span class="spinner"></span>Verifying...</div>`;
+  try{
+    const d=await api('/bills/verify','POST',{farmer_code:code,month_index:parseInt(mi),year:yr});
+    if(d.status==='NOT_FOUND'){res.innerHTML=`<div class="vres vfake"><span class="vicon">❌</span><div class="vtitle" style="color:var(--r1)">BILL NOT FOUND</div><div class="vsub">No genuine bill exists for Code <strong>${code}</strong>, ${MN[parseInt(mi)]} 20${yr}.<br><br>This bill may be <strong>FAKE</strong>.</div></div>`;return;}
+    if(d.status==='TAMPERED'){res.innerHTML=`<div class="vres vtamper"><span class="vicon">⚠️</span><div class="vtitle" style="color:#f57f17">TAMPERED</div><div class="vsub">A record exists but data appears altered.</div></div>`;return;}
+    res.innerHTML=`<div class="vres vgenuine"><span class="vicon">✅</span><div class="vtitle" style="color:var(--g1)">GENUINE BILL</div><div class="vsub">Verified in database</div><div class="vgrid"><div class="vitem"><div class="vl">Dairy</div><div class="vv">${d.dairy_name||'—'}</div></div><div class="vitem"><div class="vl">Farmer</div><div class="vv">${d.farmer_name||'—'}</div></div><div class="vitem"><div class="vl">Code</div><div class="vv">${d.farmer_code}</div></div><div class="vitem"><div class="vl">Month</div><div class="vv">${d.month_name} 20${d.year}</div></div><div class="vitem"><div class="vl">Entries</div><div class="vv">${d.total_entries}</div></div><div class="vitem"><div class="vl">Litre</div><div class="vv">${parseFloat(d.total_litre).toFixed(1)} L</div></div><div class="vitem"><div class="vl">Avg Fat</div><div class="vv">${parseFloat(d.avg_fat).toFixed(1)}</div></div><div class="vitem"><div class="vl">Generated</div><div class="vv">${d.generated_at?.substring(0,10)||'—'}</div></div></div><div class="vamt">Milk Amount: ₹${parseFloat(d.total_amount).toFixed(2)}</div></div>`;
+  }catch(e){res.innerHTML=`<div class="vres vfake"><span class="vicon">❌</span><div class="vtitle" style="color:var(--r1)">ERROR</div><div class="vsub">${e.message}</div></div>`;}
+}
+
+// ═══════════════════════ UTILS
+function om(id){document.getElementById(id).classList.add('open');}
+function cm(id){document.getElementById(id).classList.remove('open');}
+function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e.style.display='block';setTimeout(()=>e.style.display='none',3500);}
+window.onclick=e=>{if(e.target.classList.contains('mbg'))e.target.classList.remove('open');};
+
+// ═══════════════════════ AUTO INIT DB ON FIRST LOAD
+fetch('/api/init').catch(()=>{});
+</script>
+</body>
+</html>
