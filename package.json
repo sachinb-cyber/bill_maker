@@ -4,11 +4,14 @@
   "description": "Shri Krishna Dudh Dairy – Bill Management System",
   "scripts": {
     "dev": "vercel dev",
-    "build": "echo 'No build step needed'"
+    "build": "echo 'No build step needed'",
+    "start": "node server.js",
+    "local": "node server.js"
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
     "bcryptjs": "^2.4.3",
+    "dotenv": "^16.6.1",
     "jsonwebtoken": "^9.0.2",
     "pg": "^8.11.3"
   },
