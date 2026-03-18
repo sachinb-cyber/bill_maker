@@ -1,5 +1,5 @@
 const bcrypt = require('bcryptjs');
-const { sql, initDB } = require('../../lib/db');
+const { pool, initDB } = require('../../lib/db');
 const { signToken, cors } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
@@ -12,12 +12,14 @@ module.exports = async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
-    const { rows } = await sql`
-      SELECT * FROM users WHERE username = ${username} LIMIT 1
-    `;
-    if (!rows.length) return res.status(401).json({ error: 'Invalid credentials' });
+    const result = await pool.query(
+      'SELECT * FROM users WHERE username = $1 LIMIT 1',
+      [username]
+    );
+    
+    if (!result.rows.length) return res.status(401).json({ error: 'Invalid credentials' });
 
-    const user = rows[0];
+    const user = result.rows[0];
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(401).json({ error: 'Invalid credentials' });
 
