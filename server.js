@@ -30,21 +30,22 @@ const parseBody = (req) => {
   });
 };
 
-// Dynamic API router
-const apiRoutes = {
-  '/api/init': require('./api/init.js'),
-  '/api/auth/login': require('./api/auth/login.js'),
-  '/api/auth/register': require('./api/auth/register.js'),
-  '/api/dashboard': require('./api/dashboard.js'),
-  '/api/farmers': require('./api/farmers/index.js'),
-  '/api/farmers/[id]': require('./api/farmers/[id].js'),
-  '/api/bills': require('./api/bills/index.js'),
-  '/api/bills/[id]': require('./api/bills/[id].js'),
-  '/api/bills/verify': require('./api/bills/verify.js'),
-  '/api/payments': require('./api/payments/index.js'),
-  '/api/requests': require('./api/requests/index.js'),
-  '/api/requests/[id]': require('./api/requests/[id].js'),
-};
+// Dynamic API router - lazy load to avoid require errors
+function getApiRoutes() {
+  return {
+    '/api/init': require('./api/init.js'),
+    '/api/auth/login': require('./api/auth/login.js'),
+    '/api/auth/register': require('./api/auth/register.js'),
+    '/api/dashboard': require('./api/dashboard.js'),
+    '/api/farmers': require('./api/farmers/index.js'),
+    '/api/bills': require('./api/bills/index.js'),
+    '/api/bills/verify': require('./api/bills/verify.js'),
+    '/api/payments': require('./api/payments/index.js'),
+    '/api/requests': require('./api/requests/index.js'),
+  };
+}
+
+const apiRoutes = getApiRoutes();
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -94,43 +95,45 @@ const server = http.createServer(async (req, res) => {
       const pathParts = pathname.split('/').filter(p => p);
       
       // Check for routes with [id] pattern
-      for (const [route, handler] of Object.entries(apiRoutes)) {
-        if (route.includes('[id]')) {
-          const routeParts = route.split('/').filter(p => p);
-          
-          // Check if path matches pattern
-          if (pathParts.length === routeParts.length) {
-            let matches = true;
-            for (let i = 0; i < routeParts.length; i++) {
-              if (routeParts[i] !== '[id]' && routeParts[i] !== pathParts[i]) {
-                matches = false;
-                break;
-              }
+      const dynamicRoutes = [
+        { pattern: ['api', 'farmers', '[id]'], file: './api/farmers/[id].js' },
+        { pattern: ['api', 'bills', '[id]'], file: './api/bills/[id].js' },
+        { pattern: ['api', 'requests', '[id]'], file: './api/requests/[id].js' },
+      ];
+      
+      for (const { pattern, file } of dynamicRoutes) {
+        if (pathParts.length === pattern.length) {
+          let matches = true;
+          for (let i = 0; i < pattern.length; i++) {
+            if (pattern[i] !== '[id]' && pattern[i] !== pathParts[i]) {
+              matches = false;
+              break;
             }
-            
-            if (matches) {
+          }
+          
+          if (matches) {
+            try {
+              const handler = require(file);
               req.body = await parseBody(req);
               req.query = query;
               // Add id from the path
-              const idIndex = routeParts.indexOf('[id]');
+              const idIndex = pattern.indexOf('[id]');
               req.query.id = pathParts[idIndex];
               
               res.status = function(code) { this.statusCode = code; return this; };
               res.json = function(data) { this.end(JSON.stringify(data)); };
               
-              try {
-                await handler(req, res);
-                handled = true;
-                break;
-              } catch (err) {
-                console.error('API error:', err);
-                if (!res.headersSent) {
-                  res.statusCode = 500;
-                  res.end(JSON.stringify({ error: err.message }));
-                }
-                handled = true;
-                break;
+              await handler(req, res);
+              handled = true;
+              break;
+            } catch (err) {
+              console.error('API error:', err);
+              if (!res.headersSent) {
+                res.statusCode = 500;
+                res.end(JSON.stringify({ error: err.message }));
               }
+              handled = true;
+              break;
             }
           }
         }
