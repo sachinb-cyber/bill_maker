@@ -6,14 +6,26 @@ module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') return res.status(200).end();
   try {
     console.log('Init: Starting database initialization...');
-    console.log('Init: POSTGRES_URLPGSQL env var exists:', !!process.env.POSTGRES_URLPGSQL);
+    const dbUrl = process.env.POSTGRES_URLPGSQL;
+    console.log('Init: POSTGRES_URLPGSQL exists:', !!dbUrl);
+    
+    if (!dbUrl) {
+      console.warn('Init: POSTGRES_URLPGSQL not configured');
+      return res.json({ 
+        ok: false, 
+        warning: 'Database connection string not configured',
+        env_vars: Object.keys(process.env).filter(k => k.includes('POSTGR') || k.includes('SUPABASE') || k.includes('DB'))
+      });
+    }
+    
     await initDB();
-    res.json({ ok: true, message: 'Database initialized' });
+    res.json({ ok: true, message: 'Database initialized successfully' });
   } catch (err) {
-    console.error('Init error:', err);
-    res.status(500).json({ 
+    console.error('Init error:', err.message, err.stack);
+    res.status(200).json({ 
+      ok: false, 
       error: err.message,
-      details: process.env.NODE_ENV === 'development' ? err.stack : undefined
+      type: err.constructor.name
     });
   }
 };
