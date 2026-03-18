@@ -12,12 +12,19 @@ module.exports = async (req, res) => {
     const { username, password } = req.body;
     if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
 
+    console.log('Login attempt:', username);
+    
     const result = await pool.query(
       'SELECT * FROM users WHERE username = $1 LIMIT 1',
       [username]
     );
     
-    if (!result.rows.length) return res.status(401).json({ error: 'Invalid credentials' });
+    console.log('Query result:', { username, found: result.rows.length, rowCount: result.rowCount });
+    
+    if (!result.rows.length) {
+      console.log('User not found:', username);
+      return res.status(401).json({ error: 'Invalid credentials' });
+    }
 
     const user = result.rows[0];
     const match = await bcrypt.compare(password, user.password);
