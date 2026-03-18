@@ -8,12 +8,40 @@ require('dotenv').config({ path: '.env.local' });
 
 // Import the database module
 const { initDB } = require('./lib/db');
-const { verifyToken } = require('./lib/auth');
 
 // Initialize database on startup
 initDB().catch(err => console.error('DB init error:', err));
 
 const PORT = process.env.PORT || 3000;
+
+// Helper to parse request body
+const parseBody = (req) => {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => { data += chunk; });
+    req.on('end', () => {
+      try {
+        resolve(data ? JSON.parse(data) : {});
+      } catch (e) {
+        resolve({});
+      }
+    });
+    req.on('error', reject);
+  });
+};
+
+// Dynamic API router
+const apiRoutes = {
+  '/api/init': require('./api/init.js'),
+  '/api/auth/login': require('./api/auth/login.js'),
+  '/api/auth/register': require('./api/auth/register.js'),
+  '/api/dashboard': require('./api/dashboard.js'),
+  '/api/farmers': require('./api/farmers/index.js'),
+  '/api/bills': require('./api/bills/index.js'),
+  '/api/bills/verify': require('./api/bills/verify.js'),
+  '/api/payments': require('./api/payments/index.js'),
+  '/api/requests': require('./api/requests/index.js'),
+};
 
 const server = http.createServer(async (req, res) => {
   const parsedUrl = url.parse(req.url, true);
@@ -32,15 +60,54 @@ const server = http.createServer(async (req, res) => {
     return;
   }
 
-  // API routes
-  if (pathname === '/api/init') {
-    try {
-      await initDB();
-      res.writeHead(200);
-      res.end(JSON.stringify({ ok: true, message: 'Database initialized' }));
-    } catch (err) {
-      res.writeHead(500);
-      res.end(JSON.stringify({ ok: false, error: err.message }));
+  // Check if it's an API route
+  if (pathname.startsWith('/api/')) {
+    // Handle dynamic routes like /api/farmers/123, /api/bills/456, etc
+    const apiHandler = apiRoutes[pathname];
+    
+    if (apiHandler) {
+      // Parse request body
+      req.body = await parseBody(req);
+      
+      try {
+        // Provide response helpers like Vercel
+        res.status = function(code) { this.statusCode = code; return this; };
+        res.json = function(data) { this.end(JSON.stringify(data)); };
+        
+        await apiHandler(req, res);
+      } catch (err) {
+        console.error('API error:', err);
+        res.statusCode = 500;
+        res.end(JSON.stringify({ error: err.message }));
+      }
+    } else {
+      // Try to handle dynamic routes like /api/farmers/[id].js
+      let handled = false;
+      
+      for (const [route, handler] of Object.entries(apiRoutes)) {
+        if (pathname.startsWith(route.replace(/\/index$/, ''))) {
+          req.body = await parseBody(req);
+          res.status = function(code) { this.statusCode = code; return this; };
+          res.json = function(data) { this.end(JSON.stringify(data)); };
+          
+          try {
+            await handler(req, res);
+            handled = true;
+            break;
+          } catch (err) {
+            console.error('API error:', err);
+            res.statusCode = 500;
+            res.end(JSON.stringify({ error: err.message }));
+            handled = true;
+            break;
+          }
+        }
+      }
+      
+      if (!handled) {
+        res.statusCode = 404;
+        res.end(JSON.stringify({ error: 'API endpoint not found' }));
+      }
     }
     return;
   }
