@@ -1,4 +1,4 @@
-const { sql } = require('../../lib/db');
+const { pool } = require('../../lib/db');
 const { requireAuth, cors } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
@@ -9,12 +9,16 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     const user = requireAuth(req, res, ['admin', 'farmer']);
     if (!user) return;
-    if (user.role === 'admin') {
-      const { rows } = await sql`SELECT * FROM bill_requests ORDER BY created_at DESC LIMIT 200`;
-      return res.json(rows);
-    } else {
-      const { rows } = await sql`SELECT * FROM bill_requests WHERE farmer_id=${user.id} ORDER BY created_at DESC`;
-      return res.json(rows);
+    try {
+      if (user.role === 'admin') {
+        const result = await pool.query('SELECT * FROM bill_requests ORDER BY created_at DESC LIMIT 200');
+        return res.json(result.rows);
+      } else {
+        const result = await pool.query('SELECT * FROM bill_requests WHERE farmer_id=$1 ORDER BY created_at DESC', [user.id]);
+        return res.json(result.rows);
+      }
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
   }
 
@@ -25,15 +29,20 @@ module.exports = async (req, res) => {
     const { month_name, month_index, year, amount_paid, payment_mode, reference, note } = req.body;
     if (!month_name || !year || !amount_paid) return res.status(400).json({ error: 'Month, year and amount required' });
 
-    const { rows: farmers } = await sql`SELECT * FROM users WHERE id=${user.id} LIMIT 1`;
-    const farmer = farmers[0];
-    const id = 'req-' + Date.now();
+    try {
+      const farmerResult = await pool.query('SELECT * FROM users WHERE id=$1 LIMIT 1', [user.id]);
+      if (!farmerResult.rows.length) return res.status(404).json({ error: 'Farmer not found' });
+      const farmer = farmerResult.rows[0];
+      const id = 'req-' + Date.now();
 
-    await sql`
-      INSERT INTO bill_requests (id, farmer_id, farmer_code, farmer_name, month_name, month_index, year, amount_paid, payment_mode, reference, note)
-      VALUES (${id}, ${user.id}, ${farmer.farmer_code}, ${farmer.name}, ${month_name}, ${month_index}, ${year}, ${amount_paid}, ${payment_mode||'Cash'}, ${reference||''}, ${note||''})
-    `;
-    return res.json({ ok: true, id });
+      await pool.query(
+        'INSERT INTO bill_requests (id, farmer_id, farmer_code, farmer_name, month_name, month_index, year, amount_paid, payment_mode, reference, note) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)',
+        [id, user.id, farmer.farmer_code, farmer.name, month_name, month_index, year, amount_paid, payment_mode||'Cash', reference||'', note||'']
+      );
+      return res.json({ ok: true, id });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
 
   res.status(405).json({ error: 'Method not allowed' });

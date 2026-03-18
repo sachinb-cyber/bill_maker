@@ -28,14 +28,19 @@ module.exports = async (req, res) => {
     const user = requireAuth(req, res, ['admin']);
     if (!user) return;
     const { farmer_id, month_name, year, amount, payment_mode, reference, status } = req.body;
-    const { rows: f } = await sql`SELECT * FROM users WHERE id=${farmer_id} LIMIT 1`;
-    if (!f.length) return res.status(404).json({ error: 'Farmer not found' });
-    const id = 'pay-' + Date.now();
-    await sql`
-      INSERT INTO payments (id, farmer_id, farmer_code, farmer_name, month_name, year, amount, payment_mode, reference, status)
-      VALUES (${id}, ${farmer_id}, ${f[0].farmer_code}, ${f[0].name}, ${month_name}, ${year||''}, ${amount}, ${payment_mode||'Cash'}, ${reference||''}, ${status||'paid'})
-    `;
-    return res.json({ ok: true, id });
+    try {
+      const farmerResult = await pool.query('SELECT * FROM users WHERE id=$1 LIMIT 1', [farmer_id]);
+      if (!farmerResult.rows.length) return res.status(404).json({ error: 'Farmer not found' });
+      const f = farmerResult.rows[0];
+      const id = 'pay-' + Date.now();
+      await pool.query(
+        'INSERT INTO payments (id, farmer_id, farmer_code, farmer_name, month_name, year, amount, payment_mode, reference, status) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)',
+        [id, farmer_id, f.farmer_code, f.name, month_name, year||'', amount, payment_mode||'Cash', reference||'', status||'paid']
+      );
+      return res.json({ ok: true, id });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
 
   res.status(405).json({ error: 'Method not allowed' });

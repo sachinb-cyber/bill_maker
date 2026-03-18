@@ -882,7 +882,7 @@ function showErr(id,msg){const e=document.getElementById(id);e.textContent=msg;e
 window.onclick=e=>{if(e.target.classList.contains('mbg'))e.target.classList.remove('open');};
 
 // ═══════════════════════ AUTO INIT DB ON FIRST LOAD
-fetch('/api/init').catch(()=>{});
+fetch('/api/init').then(r=>r.json()).catch(()=>{console.log('DB init skipped - not configured');});
 </script>
 </body>
 </html>

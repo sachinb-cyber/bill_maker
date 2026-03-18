@@ -33,7 +33,10 @@ module.exports = async (req, res) => {
         }
         rows = q.rows;
       }
-    return res.json(rows);
+      return res.json(rows);
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
+    }
   }
 
   // POST - generate bills (admin only)
@@ -44,35 +47,35 @@ module.exports = async (req, res) => {
     const { farmer_id, year, months } = req.body;
     // months = array of { month_index, l_min, l_max, f_min, f_max, target }
 
-    const { rows: farmers } = await sql`SELECT * FROM users WHERE id=${farmer_id} AND role='farmer' LIMIT 1`;
-    if (!farmers.length) return res.status(404).json({ error: 'Farmer not found' });
-    const farmer = farmers[0];
+    try {
+      const farmerResult = await pool.query('SELECT * FROM users WHERE id=$1 AND role=$2 LIMIT 1', [farmer_id, 'farmer']);
+      if (!farmerResult.rows.length) return res.status(404).json({ error: 'Farmer not found' });
+      const farmer = farmerResult.rows[0];
 
-    const results = [];
-    for (const cfg of months) {
-      const mi = cfg.month_index;
-      const data = generateMonth(mi, year, {
-        lMin: parseFloat(cfg.l_min || farmer.l_min),
-        lMax: parseFloat(cfg.l_max || farmer.l_max),
-        fMin: parseFloat(cfg.f_min || farmer.f_min),
-        fMax: parseFloat(cfg.f_max || farmer.f_max),
-        target: parseFloat(cfg.target || farmer.target)
-      });
-      const billId = mkBillId(farmer.farmer_code, mi, year);
-      const id = 'bill-' + Date.now() + '-' + mi;
+      const results = [];
+      for (const cfg of months) {
+        const mi = cfg.month_index;
+        const data = generateMonth(mi, year, {
+          lMin: parseFloat(cfg.l_min || farmer.l_min),
+          lMax: parseFloat(cfg.l_max || farmer.l_max),
+          fMin: parseFloat(cfg.f_min || farmer.f_min),
+          fMax: parseFloat(cfg.f_max || farmer.f_max),
+          target: parseFloat(cfg.target || farmer.target)
+        });
+        const billId = mkBillId(farmer.farmer_code, mi, year);
+        const id = 'bill-' + Date.now() + '-' + mi;
 
-      // Upsert
-      await sql`
-        INSERT INTO bills (id, farmer_id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, records, cfg, bill_id)
-        VALUES (${id}, ${farmer_id}, ${farmer.farmer_code}, ${farmer.name}, ${farmer.dairy_name}, ${farmer.milk_type}, ${mi}, ${MN[mi]}, ${year}, ${data.days}, ${data.totalEntries}, ${data.totalLitre}, ${data.avgFat}, ${data.totalAmount}, ${JSON.stringify(data.records)}, ${JSON.stringify(cfg)}, ${billId})
-        ON CONFLICT (bill_id) DO UPDATE SET
-          total_entries=EXCLUDED.total_entries, total_litre=EXCLUDED.total_litre,
-          avg_fat=EXCLUDED.avg_fat, total_amount=EXCLUDED.total_amount,
-          records=EXCLUDED.records, updated_at=NOW()
-      `;
-      results.push({ month_index: mi, month_name: MN[mi], bill_id: billId, total_amount: data.totalAmount });
+        // Upsert
+        await pool.query(
+          'INSERT INTO bills (id, farmer_id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, records, cfg, bill_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17) ON CONFLICT (bill_id) DO UPDATE SET total_entries=EXCLUDED.total_entries, total_litre=EXCLUDED.total_litre, avg_fat=EXCLUDED.avg_fat, total_amount=EXCLUDED.total_amount, records=EXCLUDED.records, updated_at=NOW()',
+          [id, farmer_id, farmer.farmer_code, farmer.name, farmer.dairy_name, farmer.milk_type, mi, MN[mi], year, data.days, data.totalEntries, data.totalLitre, data.avgFat, data.totalAmount, JSON.stringify(data.records), JSON.stringify(cfg), billId]
+        );
+        results.push({ month_index: mi, month_name: MN[mi], bill_id: billId, total_amount: data.totalAmount });
+      }
+      return res.json({ ok: true, generated: results.length, results });
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
-    return res.json({ ok: true, generated: results.length, results });
   }
 
   res.status(405).json({ error: 'Method not allowed' });
