@@ -1,4 +1,4 @@
-const { sql } = require('../../lib/db');
+const { pool } = require('../../lib/db');
 const { requireAuth, cors } = require('../../lib/auth');
 
 module.exports = async (req, res) => {
@@ -8,15 +8,19 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     const user = requireAuth(req, res, ['admin', 'farmer']);
     if (!user) return;
-    if (user.role === 'admin') {
-      const { farmer_id } = req.query;
-      const { rows } = farmer_id
-        ? await sql`SELECT * FROM payments WHERE farmer_id=${farmer_id} ORDER BY created_at DESC`
-        : await sql`SELECT * FROM payments ORDER BY created_at DESC LIMIT 200`;
-      return res.json(rows);
-    } else {
-      const { rows } = await sql`SELECT * FROM payments WHERE farmer_id=${user.id} ORDER BY created_at DESC`;
-      return res.json(rows);
+    try {
+      if (user.role === 'admin') {
+        const farmer_id = req.query?.farmer_id;
+        const result = farmer_id
+          ? await pool.query('SELECT * FROM payments WHERE farmer_id=$1 ORDER BY created_at DESC', [farmer_id])
+          : await pool.query('SELECT * FROM payments ORDER BY created_at DESC LIMIT 200');
+        return res.json(result.rows);
+      } else {
+        const result = await pool.query('SELECT * FROM payments WHERE farmer_id=$1 ORDER BY created_at DESC', [user.id]);
+        return res.json(result.rows);
+      }
+    } catch (err) {
+      return res.status(500).json({ error: err.message });
     }
   }
 

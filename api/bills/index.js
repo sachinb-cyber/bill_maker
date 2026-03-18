@@ -1,4 +1,4 @@
-const { sql } = require('../../lib/db');
+const { pool } = require('../../lib/db');
 const { requireAuth, cors } = require('../../lib/auth');
 const { generateMonth, mkBillId, MN, MD } = require('../../lib/generate');
 
@@ -10,24 +10,29 @@ module.exports = async (req, res) => {
   if (req.method === 'GET') {
     const user = requireAuth(req, res, ['admin', 'farmer', 'checker']);
     if (!user) return;
-    const { farmer_id, year } = req.query;
+    const farmer_id = req.query?.farmer_id;
+    const year = req.query?.year;
 
-    let rows;
-    if (user.role === 'farmer') {
-      // Farmer sees only their own bills
-      const q = year
-        ? await sql`SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=${user.id} AND year=${year} ORDER BY month_index`
-        : await sql`SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=${user.id} ORDER BY year, month_index`;
-      rows = q.rows;
-    } else {
-      // Admin/checker sees all or filtered
-      const q = farmer_id && year
-        ? await sql`SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=${farmer_id} AND year=${year} ORDER BY month_index`
-        : farmer_id
-        ? await sql`SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=${farmer_id} ORDER BY year, month_index`
-        : await sql`SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills ORDER BY created_at DESC LIMIT 200`;
-      rows = q.rows;
-    }
+    try {
+      let rows;
+      if (user.role === 'farmer') {
+        // Farmer sees only their own bills
+        const q = year
+          ? await pool.query('SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=$1 AND year=$2 ORDER BY month_index', [user.id, year])
+          : await pool.query('SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=$1 ORDER BY year, month_index', [user.id]);
+        rows = q.rows;
+      } else {
+        // Admin/checker sees all or filtered
+        let q;
+        if (farmer_id && year) {
+          q = await pool.query('SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=$1 AND year=$2 ORDER BY month_index', [farmer_id, year]);
+        } else if (farmer_id) {
+          q = await pool.query('SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills WHERE farmer_id=$1 ORDER BY year, month_index', [farmer_id]);
+        } else {
+          q = await pool.query('SELECT id, farmer_code, farmer_name, dairy_name, milk_type, month_index, month_name, year, days, total_entries, total_litre, avg_fat, total_amount, bill_id, created_at, updated_at FROM bills ORDER BY created_at DESC LIMIT 200');
+        }
+        rows = q.rows;
+      }
     return res.json(rows);
   }
 
