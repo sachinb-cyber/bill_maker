@@ -37,10 +37,13 @@ const apiRoutes = {
   '/api/auth/register': require('./api/auth/register.js'),
   '/api/dashboard': require('./api/dashboard.js'),
   '/api/farmers': require('./api/farmers/index.js'),
+  '/api/farmers/[id]': require('./api/farmers/[id].js'),
   '/api/bills': require('./api/bills/index.js'),
+  '/api/bills/[id]': require('./api/bills/[id].js'),
   '/api/bills/verify': require('./api/bills/verify.js'),
   '/api/payments': require('./api/payments/index.js'),
   '/api/requests': require('./api/requests/index.js'),
+  '/api/requests/[id]': require('./api/requests/[id].js'),
 };
 
 const server = http.createServer(async (req, res) => {
@@ -62,12 +65,13 @@ const server = http.createServer(async (req, res) => {
 
   // Check if it's an API route
   if (pathname.startsWith('/api/')) {
-    // Handle dynamic routes like /api/farmers/123, /api/bills/456, etc
-    const apiHandler = apiRoutes[pathname];
+    // First try exact match
+    let apiHandler = apiRoutes[pathname];
     
     if (apiHandler) {
       // Parse request body
       req.body = await parseBody(req);
+      req.query = query;
       
       try {
         // Provide response helpers like Vercel
@@ -77,29 +81,57 @@ const server = http.createServer(async (req, res) => {
         await apiHandler(req, res);
       } catch (err) {
         console.error('API error:', err);
-        res.statusCode = 500;
-        res.end(JSON.stringify({ error: err.message }));
+        if (!res.headersSent) {
+          res.statusCode = 500;
+          res.end(JSON.stringify({ error: err.message }));
+        }
       }
     } else {
-      // Try to handle dynamic routes like /api/farmers/[id].js
+      // Try to match dynamic routes like /api/farmers/123, /api/bills/456, etc
       let handled = false;
       
+      // Try to match against dynamic route patterns
+      const pathParts = pathname.split('/').filter(p => p);
+      
+      // Check for routes with [id] pattern
       for (const [route, handler] of Object.entries(apiRoutes)) {
-        if (pathname.startsWith(route.replace(/\/index$/, ''))) {
-          req.body = await parseBody(req);
-          res.status = function(code) { this.statusCode = code; return this; };
-          res.json = function(data) { this.end(JSON.stringify(data)); };
+        if (route.includes('[id]')) {
+          const routeParts = route.split('/').filter(p => p);
           
-          try {
-            await handler(req, res);
-            handled = true;
-            break;
-          } catch (err) {
-            console.error('API error:', err);
-            res.statusCode = 500;
-            res.end(JSON.stringify({ error: err.message }));
-            handled = true;
-            break;
+          // Check if path matches pattern
+          if (pathParts.length === routeParts.length) {
+            let matches = true;
+            for (let i = 0; i < routeParts.length; i++) {
+              if (routeParts[i] !== '[id]' && routeParts[i] !== pathParts[i]) {
+                matches = false;
+                break;
+              }
+            }
+            
+            if (matches) {
+              req.body = await parseBody(req);
+              req.query = query;
+              // Add id from the path
+              const idIndex = routeParts.indexOf('[id]');
+              req.query.id = pathParts[idIndex];
+              
+              res.status = function(code) { this.statusCode = code; return this; };
+              res.json = function(data) { this.end(JSON.stringify(data)); };
+              
+              try {
+                await handler(req, res);
+                handled = true;
+                break;
+              } catch (err) {
+                console.error('API error:', err);
+                if (!res.headersSent) {
+                  res.statusCode = 500;
+                  res.end(JSON.stringify({ error: err.message }));
+                }
+                handled = true;
+                break;
+              }
+            }
           }
         }
       }
